@@ -1,0 +1,56 @@
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-plus-circle me-2"></i> Create Bucket</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="/buckets" class="btn btn-sm btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Buckets
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8 col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-bucket me-1"></i> New Bucket Details
+            </div>
+            <div class="card-body">
+                <form action="/buckets/create" method="POST">
+                    <div class="mb-3">
+                        <label for="bucketName" class="form-label">Bucket Name</label>
+                        <input type="text" class="form-control" id="bucketName" name="bucketName" required
+                               pattern="[a-z0-9.-]+" title="Lowercase letters, numbers, periods, and hyphens only">
+                        <div class="form-text">
+                            Bucket names must be unique, containing only lowercase letters, numbers, periods, and hyphens.
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Create Bucket
+                        </button>
+                        <a href="/buckets" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-info-circle me-1"></i> About Bucket Names
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">S3 Bucket Naming Rules</h5>
+                <p class="card-text">When creating a new bucket, keep these naming constraints in mind:</p>
+                <ul>
+                    <li>Names must be between 3 and 63 characters long</li>
+                    <li>Names can consist only of lowercase letters, numbers, dots (.), and hyphens (-)</li>
+                    <li>Names must begin and end with a letter or number</li>
+                    <li>Names must not be formatted as an IP address (e.g., 192.168.5.4)</li>
+                    <li>Names must be unique within your S3 namespace</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

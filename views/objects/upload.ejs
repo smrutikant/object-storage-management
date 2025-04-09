@@ -1,0 +1,190 @@
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-upload me-2"></i> Upload Files</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="/buckets/<%= bucketName %>/objects<%= prefix ? '?prefix=' + encodeURIComponent(prefix) : '' %>" class="btn btn-sm btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Browser
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-file-upload me-1"></i> File Upload
+            </div>
+            <div class="card-body">
+                <form action="/objects/upload" method="POST" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label">Destination</label>
+                        <div class="input-group">
+                            <span class="input-group-text">Bucket</span>
+                            <input type="text" class="form-control" value="<%= bucketName %>" readonly>
+                            <input type="hidden" name="bucketName" value="<%= bucketName %>">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Path</label>
+                        <div class="input-group">
+                            <span class="input-group-text">Prefix</span>
+                            <input type="text" class="form-control" name="prefix" value="<%= prefix %>" readonly>
+                        </div>
+                        <div class="form-text">
+                            Files will be uploaded to: <code><%= bucketName %>/<%= prefix %></code>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="files" class="form-label">Select Files</label>
+                        <input class="form-control form-control-lg" type="file" id="files" name="files" multiple required>
+                        <div class="form-text">
+                            You can select multiple files to upload at once.
+                        </div>
+                    </div>
+                    
+                    <div id="file-preview-container" class="mb-3"></div>
+                    
+                    <div id="file-list" class="list-group mb-3 d-none">
+                        <div class="list-group-item list-group-item-info">
+                            <strong>Selected files:</strong> <span id="file-count">0</span>
+                        </div>
+                        <div id="file-names"></div>
+                    </div>
+                    
+                    <div class="progress mb-3 d-none" id="upload-progress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" 
+                             aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%">0%</div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary" id="upload-btn">
+                            <i class="fas fa-cloud-upload-alt"></i> Upload Files
+                        </button>
+                        <a href="/buckets/<%= bucketName %>/objects<%= prefix ? '?prefix=' + encodeURIComponent(prefix) : '' %>" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-info-circle me-1"></i> Upload Guidelines
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">File Upload Information</h5>
+                <ul class="list-group list-group-flush mb-3">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Maximum file size
+                        <span class="badge bg-primary rounded-pill">5 GB</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Maximum files
+                        <span class="badge bg-primary rounded-pill">10</span>
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-check-circle text-success me-1"></i> All file types supported
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-info-circle text-info me-1"></i> Files with the same name will be overwritten
+                    </li>
+                </ul>
+                
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i> The upload process may take some time for large files.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+        const progressBar = document.querySelector('.progress-bar');
+        const progressDiv = document.getElementById('upload-progress');
+        const uploadBtn = document.getElementById('upload-btn');
+        const fileInput = document.getElementById('files');
+        const fileList = document.getElementById('file-list');
+        const fileCount = document.getElementById('file-count');
+        const fileNames = document.getElementById('file-names');
+        
+        // Show file list when files are selected
+        fileInput.addEventListener('change', function() {
+            const files = this.files;
+            
+            if (files.length > 0) {
+                fileList.classList.remove('d-none');
+                fileCount.textContent = files.length;
+                fileNames.innerHTML = '';
+                
+                let totalSize = 0;
+                
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    totalSize += file.size;
+                    
+                    const item = document.createElement('div');
+                    item.className = 'list-group-item d-flex justify-content-between align-items-center';
+                    item.innerHTML = `
+                        <div>
+                            <span class="me-2">${i+1}.</span>
+                            ${file.name}
+                        </div>
+                        <span class="badge bg-secondary">${formatFileSize(file.size)}</span>
+                    `;
+                    fileNames.appendChild(item);
+                }
+                
+                // Add total size
+                const totalItem = document.createElement('div');
+                totalItem.className = 'list-group-item d-flex justify-content-between align-items-center list-group-item-dark';
+                totalItem.innerHTML = `
+                    <strong>Total Size</strong>
+                    <span class="badge bg-primary">${formatFileSize(totalSize)}</span>
+                `;
+                fileNames.appendChild(totalItem);
+            } else {
+                fileList.classList.add('d-none');
+            }
+        });
+        
+        form.addEventListener('submit', function(e) {
+            const fileInput = document.getElementById('files');
+            if (fileInput.files.length > 0) {
+                // Show progress bar and disable button
+                progressDiv.classList.remove('d-none');
+                uploadBtn.disabled = true;
+                uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+                
+                // Simulate upload progress (in a real app, you'd use XHR or fetch to track actual progress)
+                let progress = 0;
+                const interval = setInterval(function() {
+                    progress += Math.random() * 5;
+                    if (progress > 100) progress = 100;
+                    
+                    progressBar.style.width = progress + '%';
+                    progressBar.setAttribute('aria-valuenow', progress);
+                    progressBar.textContent = Math.round(progress) + '%';
+                    
+                    if (progress === 100) {
+                        clearInterval(interval);
+                    }
+                }, 300);
+            }
+        });
+        
+        // Format file size helper
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+    });
+</script>

@@ -1,0 +1,233 @@
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-file me-2"></i> Object Details</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="/buckets/<%= bucketName %>/objects" class="btn btn-sm btn-outline-secondary me-2">
+            <i class="fas fa-arrow-left"></i> Back to Browser
+        </a>
+        <div class="btn-group btn-group-sm me-2">
+            <a href="/objects/<%= bucketName %>/<%= encodeURIComponent(object.key) %>/download" class="btn btn-primary">
+                <i class="fas fa-download"></i> Download
+            </a>
+            <a href="/objects/<%= bucketName %>/<%= encodeURIComponent(object.key) %>/share" class="btn btn-success">
+                <i class="fas fa-share-alt"></i> Share
+            </a>
+        </div>
+        <button data-file-name="<%= object.name %>" data-file-key="<%= object.key %>" class="btn btn-sm btn-danger delete-file-btn">
+            <i class="fas fa-trash-alt"></i> Delete
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-info-circle me-1"></i> Basic Information
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">File Name:</div>
+                    <div class="col-md-9"><%= object.name %></div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">Object Key:</div>
+                    <div class="col-md-9"><code><%= object.key %></code></div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">File Size:</div>
+                    <div class="col-md-9"><%= formatFileSize(object.size) %></div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">MIME Type:</div>
+                    <div class="col-md-9"><%= object.type || 'Unknown' %></div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">Last Modified:</div>
+                    <div class="col-md-9"><%= formatDate(object.lastModified) %></div>
+                </div>
+            </div>
+        </div>
+
+        <% if (isImageFile(object.type)) { %>
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-eye me-1"></i> Preview
+                </div>
+                <div class="card-body text-center">
+                    <!-- For public S3, direct URL might work -->
+                    <img src="<%= object.publicUrl %>" class="img-fluid" alt="<%= object.name %>" style="max-height: 400px;" onerror="this.onerror=null; this.src='/objects/<%= bucketName %>/<%= encodeURIComponent(object.key) %>/download'; this.classList.add('preview-fallback');">
+                </div>
+            </div>
+            <% } %>
+        
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-link me-1"></i> Object URLs
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Public URL:</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" value="<%= object.publicUrl %>" readonly id="publicUrl">
+                        <button class="btn btn-outline-primary" type="button" id="copyPublicUrl">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
+                    </div>
+                    <div class="form-text">
+                        Note: This URL will only work if your bucket has public access enabled.
+                    </div>
+                </div>
+                
+                <div>
+                    <a href="/objects/<%= bucketName %>/<%= encodeURIComponent(object.key) %>/share" class="btn btn-primary">
+                        <i class="fas fa-share-alt"></i> Generate Temporary Shareable Link
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-server me-1"></i> Storage Information
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-5 fw-bold">Bucket:</div>
+                    <div class="col-7"><%= bucketName %></div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-5 fw-bold">S3 Endpoint:</div>
+                    <div class="col-7 text-truncate"><small><%= s3Endpoint %></small></div>
+                </div>
+            </div>
+        </div>
+        
+        <% if (Object.keys(object.metadata).length > 0) { %>
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-tags me-1"></i> Metadata
+            </div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush">
+                    <% Object.entries(object.metadata).forEach(([key, value]) => { %>
+                        <li class="list-group-item">
+                            <div class="fw-bold"><%= key %>:</div>
+                            <div><%= value %></div>
+                        </li>
+                    <% }); %>
+                </ul>
+            </div>
+        </div>
+        <% } %>
+        
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-cog me-1"></i> Actions
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="/objects/<%= bucketName %>/<%= encodeURIComponent(object.key) %>/download" class="btn btn-success">
+                        <i class="fas fa-download"></i> Download File
+                    </a>
+                    <a href="/objects/<%= bucketName %>/<%= encodeURIComponent(object.key) %>/share" class="btn btn-primary">
+                        <i class="fas fa-share-alt"></i> Share File
+                    </a>
+                    <button data-file-name="<%= object.name %>" data-file-key="<%= object.key %>" class="btn btn-danger delete-file-btn">
+                        <i class="fas fa-trash-alt"></i> Delete File
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete File Modal -->
+<div class="modal fade" id="deleteFileModal" tabindex="-1" aria-labelledby="deleteFileModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteFileModalLabel">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete the file <strong id="deleteFileName"></strong>?
+                <p class="text-danger mt-2">
+                    <i class="fas fa-exclamation-triangle"></i> This action cannot be undone.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteFileForm" method="POST" style="display: inline;">
+                    <input type="hidden" name="_method" value="DELETE">
+                    <button type="submit" class="btn btn-danger">Delete File</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Copy URL to clipboard
+        document.getElementById('copyPublicUrl').addEventListener('click', function() {
+            const urlField = document.getElementById('publicUrl');
+            urlField.select();
+            document.execCommand('copy');
+            
+            // Show success message
+            const btn = this;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            btn.classList.remove('btn-outline-primary');
+            btn.classList.add('btn-success');
+            
+            setTimeout(function() {
+                btn.innerHTML = originalText;
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-outline-primary');
+            }, 2000);
+        });
+        
+        // Handle delete file button clicks
+        const deleteFileBtns = document.querySelectorAll('.delete-file-btn');
+        deleteFileBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const fileName = this.dataset.fileName;
+                const fileKey = this.dataset.fileKey;
+                
+                document.getElementById('deleteFileName').textContent = fileName;
+                document.getElementById('deleteFileForm').action = `/objects/<%= bucketName %>/${encodeURIComponent(fileKey)}`;
+                
+                const myModal = new bootstrap.Modal(document.getElementById('deleteFileModal'));
+                myModal.show();
+            });
+        });
+    });
+    
+    // Helper function to format file size
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+    
+    // Helper function to format date
+    function formatDate(date) {
+        if (!date) return '';
+        
+        const d = new Date(date);
+        return d.toLocaleDateString() + ' ' + d.toLocaleTimeString();
+    }
+    
+    // Check if file is an image for preview
+    function isImageFile(mimeType) {
+        if (!mimeType) return false;
+        return mimeType.startsWith('image/');
+    }
+</script>

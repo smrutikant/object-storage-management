@@ -1,0 +1,132 @@
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-share-alt me-2"></i> Share Object</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="/buckets/<%= bucketName %>/objects" class="btn btn-sm btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Browser
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-link me-1"></i> Share Links for <%= objectName %>
+            </div>
+            <div class="card-body">
+                <h5 class="mb-3">Temporary Pre-signed URL</h5>
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" id="signedUrl" value="<%= signedUrl %>" readonly>
+                    <button class="btn btn-outline-primary" type="button" id="copySignedUrl">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
+                </div>
+                <div class="alert alert-info">
+                    <i class="fas fa-clock"></i> This link will expire in <strong><%= Math.floor(expiresIn / 60) %> minutes</strong>.
+                </div>
+                
+                <h5 class="mt-4 mb-3">Public URL</h5>
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" id="publicUrl" value="<%= publicUrl %>" readonly>
+                    <button class="btn btn-outline-primary" type="button" id="copyPublicUrl">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
+                </div>
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i> Note: This URL will only work if your bucket has public access enabled.
+                </div>
+                
+                <div class="mt-4">
+                    <h5>Expiration Time:</h5>
+                    <form action="/objects/<%= bucketName %>/<%= encodeURIComponent(objectKey) %>/share" method="GET" class="row g-3 align-items-center">
+                        <div class="col-auto">
+                            <label class="col-form-label">Get a link that expires in:</label>
+                        </div>
+                        <div class="col-auto">
+                            <select class="form-select" name="expiresIn">
+                                <option value="300" <%= expiresIn == 300 ? 'selected' : '' %>>5 minutes</option>
+                                <option value="3600" <%= expiresIn == 3600 ? 'selected' : '' %>>1 hour</option>
+                                <option value="86400" <%= expiresIn == 86400 ? 'selected' : '' %>>1 day</option>
+                                <option value="604800" <%= expiresIn == 604800 ? 'selected' : '' %>>1 week</option>
+                            </select>
+                        </div>
+                        <div class="col-auto">
+                            <button type="submit" class="btn btn-primary">Generate New Link</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-info-circle me-1"></i> Object Information
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <strong>Name:</strong> <%= objectName %>
+                    </li>
+                    <li class="list-group-item">
+                        <strong>Bucket:</strong> <%= bucketName %>
+                    </li>
+                    <li class="list-group-item">
+                        <strong>Full Path:</strong> <code><%= objectKey %></code>
+                    </li>
+                </ul>
+                
+                <div class="mt-3">
+                    <a href="/objects/<%= bucketName %>/<%= encodeURIComponent(objectKey) %>/download" class="btn btn-success w-100">
+                        <i class="fas fa-download"></i> Download File
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Copy signed URL to clipboard
+        document.getElementById('copySignedUrl').addEventListener('click', function() {
+            const urlField = document.getElementById('signedUrl');
+            urlField.select();
+            document.execCommand('copy');
+            
+            // Show success message
+            const btn = this;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            btn.classList.remove('btn-outline-primary');
+            btn.classList.add('btn-success');
+            
+            setTimeout(function() {
+                btn.innerHTML = originalText;
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-outline-primary');
+            }, 2000);
+        });
+        
+        // Copy public URL to clipboard
+        document.getElementById('copyPublicUrl').addEventListener('click', function() {
+            const urlField = document.getElementById('publicUrl');
+            urlField.select();
+            document.execCommand('copy');
+            
+            // Show success message
+            const btn = this;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            btn.classList.remove('btn-outline-primary');
+            btn.classList.add('btn-success');
+            
+            setTimeout(function() {
+                btn.innerHTML = originalText;
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-outline-primary');
+            }, 2000);
+        });
+    });
+</script>
