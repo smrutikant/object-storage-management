@@ -40,8 +40,8 @@ A full-featured Express.js application for managing S3 buckets and objects with 
 
 1. Clone the repository:
    ```
-   git clone https://github.com/your-username/s3-bucket-manager.git
-   cd s3-bucket-manager
+   git clone https://github.com/smrutikant/object-storage-management.git
+   cd object-storage-management
    ```
 
 2. Install dependencies:
