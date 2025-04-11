@@ -25,10 +25,10 @@
     </div>
     
     <div class="btn-toolbar mb-2 mb-md-0">
-        <a href="/objects/upload?bucketName=<%= bucketName %>&prefix=<%= encodeURIComponent(prefix) %>" class="btn btn-sm btn-success me-2">
+        <a href="/objects/upload?bucketName=<%= bucketName %>&prefix=<%= encodeURIComponent(prefix) %>" class="btn btn-sm btn-primary me-2">
             <i class="fas fa-upload"></i> Upload File
         </a>
-        <button onclick="createFolder('<%= bucketName %>', '<%= prefix %>')" class="btn btn-sm btn-info me-2">
+        <button onclick="createFolder('<%= bucketName %>', '<%= prefix %>')" class="btn btn-sm btn-primary me-2">
             <i class="fas fa-folder-plus"></i> New Folder
         </button>
         <a href="/buckets" class="btn btn-sm btn-outline-secondary">
@@ -96,13 +96,15 @@
             <div id="batchActions" class="bg-light p-2 mb-3 d-none">
                 <div class="d-flex justify-content-between align-items-center">
                     <span><i class="fas fa-check-square me-1"></i> <span id="selectedCounter">0</span> items selected</span>
-                    <button onclick="batchDeleteObjectsPrompt('<%= bucketName %>', '<%= prefix %>')" class="btn btn-sm btn-danger">
-                        <i class="fas fa-trash"></i> Delete Selected
-                    </button>
+                    <div>
+                        <button onclick="batchDeleteObjectsPrompt('<%= bucketName %>', '<%= prefix %>')" class="btn btn-sm btn-danger">
+                            <i class="fa-solid fa-trash-can"></i> Delete Selected
+                        </button>
 
-                    <button onclick="moveObjectPrompt('<%= bucketName %>', '<%= prefix %>')" class="btn btn-sm btn-danger">
-                        <i class="fas fa-trash"></i> Move Selected Objects
-                    </button>
+                        <button onclick="moveObjectPrompt('<%= bucketName %>', '<%= prefix %>')" class="btn btn-sm btn-warning">
+                            <i class="fa-solid fa-share"></i> Move Selected Objects
+                        </button>
+                    </div>
                 </div>
             </div>
             
@@ -213,7 +215,7 @@
             <div class="modal-footer">
                 <input type="hidden" id="batchDeleteBucket">
                 <input type="hidden" id="batchDeletePrefix">
-                <button type="button" id="confBatchDelete" onclick="batchDeleteObjects()" class="btn btn-danger">Delete File</button>
+                <button type="button" id="confBatchDelete" onclick="batchDeleteObjects()" class="btn btn-danger"><i class="fa-solid fa-trash-can"></i> Delete File</button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
             </div>
         </div>
@@ -235,6 +237,7 @@
 
                     </div>
                     <select id="destinationBucket" class="form-control">
+                        <option value="">--Choose destination bucket--</option>
                         <% bucketList.forEach(function(bucket) {
                           if(bucketName !== bucket.Name) { 
                         %>
@@ -249,7 +252,7 @@
             <div class="modal-footer">
                 <input type="hidden" id="sourceBucket">
                 <input type="hidden" id="bucketPrefix">
-                <button type="button" id="moveObject" onclick="moveObjects()" class="btn btn-danger">Move Files</button>
+                <button type="button" id="moveObject" disabled onclick="moveObjects()" class="btn btn-warning"><i class="fa-solid fa-share"></i> Move Files</button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
             </div>
         </div>

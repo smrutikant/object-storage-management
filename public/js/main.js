@@ -615,4 +615,12 @@ function initializeDataTables() {
             }
         }
     });
+
+    document.getElementById("destinationBucket").addEventListener("change",function(){
+        if(this.value !== ""){
+            document.getElementById("moveObject").removeAttribute("disabled");
+        }else{
+            document.getElementById("moveObject").setAttribute("disabled",true);
+        }
+    });
 }
