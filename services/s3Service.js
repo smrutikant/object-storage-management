@@ -265,6 +265,47 @@ exports.getSignedUrl = (bucketName, key, expires = 3600) => {
 };
 
 /**
+ * Move an object from one bucket to other
+ * Step 1 : Copy the object from the source bucket to the destination bucket
+ * Step 2 : Delete the object from the source bucket
+ * @param {string} sourceBucket - Name of the bucket containing the objects
+ * @param {string} destinationBucket - Name of the bucket where the objects will be moved
+ * @param {string} key - Array of object keys for which to generate presigned URLs
+ */
+
+exports.moveObject = async (sourceBucket,destinationBucket,key)=>{
+
+  try {
+    // Step 1
+    const copyParams = {
+      Bucket: destinationBucket,
+      CopySource: `${sourceBucket}/${key}`,
+      Key: key
+    };
+
+    const objectMoved = await s3.copyObject(copyParams).promise();
+
+    // Step 2
+    const deleteParams = {
+      Bucket: sourceBucket,
+      Key: key
+    };
+
+    const objectDeleted = await s3.deleteObject(deleteParams).promise();
+  
+    const info = {
+      "copied":`Object ${key} copied to ${destinationBucket}`,
+      "deleted": `Object ${key} deleted from ${sourceBucket}`
+    }
+    return info;
+
+  } catch (error) {
+    console.error('Error moving object:', error);
+  }
+
+}
+
+/**
  * Create a public URL for an object (if the bucket policy allows it)
  * @param {string} bucketName - Name of the bucket
  * @param {string} key - Object key

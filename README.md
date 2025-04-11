@@ -16,6 +16,7 @@ A full-featured Express.js application for managing S3 buckets and objects with 
   - Upload files (single or multiple) with progress indicator
   - Download files
   - Delete files (single or batch)
+  - Move objects between buckets
   - Create folders
   - Batch selection and operations
 
@@ -94,6 +95,10 @@ A full-featured Express.js application for managing S3 buckets and objects with 
   - Click "Upload Files" to start the upload
 - **Download File**: Click the download icon next to a file
 - **Delete File**: Click the delete icon next to a file
+- **Move File**: 
+  - Click the move icon next to a file or use batch selection
+  - Select the destination bucket from the dropdown menu
+  - Click "Move" to transfer the file(s) to the new bucket
 - **View File Details**: Click on the file name to view details
 - **Share File**: Click the share icon to generate shareable links
 
@@ -102,6 +107,7 @@ A full-featured Express.js application for managing S3 buckets and objects with 
 - **Select Files**: Use checkboxes to select multiple files
 - **Select All**: Use the "Select All" checkbox to select all files on current page
 - **Batch Delete**: Select multiple files then click "Delete Selected"
+- **Batch Move**: Select multiple files then click "Move Selected" to transfer files to another bucket
 
 ### Searching & Filtering
 
@@ -222,6 +228,15 @@ If file uploads are failing:
 3. Ensure the bucket exists and has proper permissions
 4. Check server logs for detailed error messages
 
+### Move Operation Issues
+
+If moving files between buckets fails:
+
+1. Verify that both source and destination buckets exist
+2. Check permissions on both buckets
+3. Ensure the object name doesn't already exist in the destination bucket
+4. For large files, check if the operation times out (adjust timeout settings if needed)
+
 ### Browser Compatibility
 
 This application is tested with:
@@ -238,7 +253,4 @@ MIT
 
 ## Support
 
-For any questions or issues, please open an issue in the GitHub repository.<img width="1512" alt="Screenshot 2025-04-10 at 12 57 08 AM" src="https://github.com/user-attachments/assets/5e3e7c7b-05d4-418e-86cf-c60a0ad4399c" />
-<img width="1511" alt="Screenshot 2025-04-10 at 12 58 29 AM" src="https://github.com/user-attachments/assets/2a33b006-9c57-4989-b90a-0a0e84f115c1" />
-<img width="757" alt="Screenshot 2025-04-10 at 1 00 34 AM" src="https://github.com/user-attachments/assets/da28748c-6b32-4486-95ab-ab742ff3cfe8" />
-![screencapture-localhost-3000-objects-salesforce-dev-image-34-png-2025-04-10-01_01_30](https://github.com/user-attachments/assets/e088e6ce-d08c-49d4-bab4-ee4341d4d080)
+For any questions or issues, please open an issue in the GitHub repository.

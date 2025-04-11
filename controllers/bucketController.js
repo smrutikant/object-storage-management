@@ -121,6 +121,7 @@ function formatDate(date) {
  */
 exports.bucketDetails = async (req, res, next) => {
   try {
+    const buckets = await s3Service.listBuckets();
     const { bucketName } = req.params;
     const prefix = req.query.prefix || '';
     
@@ -174,7 +175,9 @@ exports.bucketDetails = async (req, res, next) => {
       };
     });
     
+    console.log(buckets, "Buckets");
     res.render('objects/list', { 
+      bucketList:buckets,
       title: `Bucket: ${bucketName}`,
       bucketName: bucketName,
       prefix: prefix,

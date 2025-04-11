@@ -321,16 +321,26 @@ function updateBatchActionButtons() {
     updateSelectAllCheckboxState();
 }
 
+function batchDeleteObjectsPrompt(bucketName, prefix) {
+    const checkboxes = document.querySelectorAll('.file-checkbox:checked');
+    const keys = Array.from(checkboxes).map(checkbox => checkbox.value);
+    const keysHtmlString = keys.join('<br>');
+    const myModal = new bootstrap.Modal(document.getElementById('deleteBatchFileModal'));
+    document.getElementById("batchdeletemessage").innerHTML = `Are you sure you want to delete below ${checkboxes.length} item(s) ? <br> <div class="batch-delete-files-list"> ${keysHtmlString} </div>`;
+    document.getElementById("batchDeletePrefix").value = prefix;
+    document.getElementById("batchDeleteBucket").value = bucketName;
+    myModal.show();
+}
+
 /**
  * Handle batch deletion of objects
  */
-function batchDeleteObjects(bucketName, prefix) {
+function batchDeleteObjects() {
+    const prefix = document.getElementById("batchDeletePrefix").value;
+    const bucketName = document.getElementById("batchDeleteBucket").value;
     const checkboxes = document.querySelectorAll('.file-checkbox:checked');
     if (checkboxes.length === 0) return;
     
-    if (!confirm(`Are you sure you want to delete ${checkboxes.length} selected items?`)) {
-        return;
-    }
     
     const keys = Array.from(checkboxes).map(checkbox => checkbox.value);
     
@@ -353,8 +363,66 @@ function batchDeleteObjects(bucketName, prefix) {
     })
     .then((data) => {
         // Show success message and reload
-        alert(`Successfully deleted ${data.deletedCount} file(s).${data.errorCount > 0 ? ` Failed to delete ${data.errorCount} file(s).` : ''}`);
-        window.location.reload();
+        //alert(`Successfully deleted ${data.deletedCount} file(s).${data.errorCount > 0 ? ` Failed to delete ${data.errorCount} file(s).` : ''}`);
+        window.location.href = "?message=" + `Successfully deleted ${data.deletedCount} file(s).${data.errorCount > 0 ? ` Failed to delete ${data.errorCount} file(s).` : ''}`;
+    })
+    .catch(error => {
+        alert('Error deleting objects: ' + error.message);
+    });
+}
+
+
+function moveObjectPrompt(bucketName, prefix) {
+    const checkboxes = document.querySelectorAll('.file-checkbox:checked');
+    const keys = Array.from(checkboxes).map(checkbox => checkbox.value);
+    const keysHtmlString = keys.join('<br>');
+    const moveObjModal = new bootstrap.Modal(document.getElementById('moveObjectModal'));
+    document.getElementById("moveObjectMessage").innerHTML = `Move these ${checkboxes.length} item(s) to </div>`;
+    document.getElementById("bucketPrefix").value = prefix;
+    document.getElementById("sourceBucket").value = bucketName;
+    moveObjModal.show();
+}
+
+
+/**
+ * Move one or many objects between buckets
+ */
+function moveObjects() {
+    const prefix = document.getElementById("batchDeletePrefix").value;
+    const bucketName = document.getElementById("sourceBucket").value;
+    const destinationbucketname = document.getElementById("destinationBucket").value;
+    const checkboxes = document.querySelectorAll('.file-checkbox:checked');
+
+    if(bucketName === destinationbucketname) return;
+    if (checkboxes.length === 0) return;
+    
+    
+    const keys = Array.from(checkboxes).map(checkbox => checkbox.value);
+    
+    // Use fetch API to call the batch delete endpoint
+    fetch(`/objects/${bucketName}/move-objects`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+            keys: keys,
+            prefix: prefix,
+            sourceBucket:bucketName,
+            destinationBucket:destinationbucketname
+
+        }),
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Failed to move objects');
+        }
+        return response.json();
+    })
+    .then((data) => {
+        // Show success message and reload
+        //alert(`Successfully deleted ${data.deletedCount} file(s).${data.errorCount > 0 ? ` Failed to delete ${data.errorCount} file(s).` : ''}`);
+        window.location.href = "?message=" + `Successfully moved ${data.movedCount} file(s).${data.errorCount > 0 ? ` Failed to move ${data.errorCount} file(s).` : ''}`;
     })
     .catch(error => {
         alert('Error deleting objects: ' + error.message);

@@ -194,7 +194,7 @@ async function actionDeleteObject(bucketName,key,prefix) {
   }
 }
 
-exports.filAction = async(req, res, next) => {
+exports.fileAction = async(req, res, next) => {
   try{
     const { bucketName, key } = req.params;
     const { prefix } = req.query;
@@ -275,14 +275,11 @@ exports.batchDeleteObjects = async (req, res, next) => {
     try {
       const { bucketName } = req.params;
       const { keys, prefix } = req.body;
-      
+
       if (!keys || !Array.isArray(keys) || keys.length === 0) {
         return res.status(400).json({ error: 'No keys provided for deletion' });
       }
       
-      // AWS S3 SDK can delete up to 1000 objects in a single call
-      // Here we'll delete them one by one for simplicity, but in a production
-      // environment, you'd want to use the deleteObjects operation
       
       const results = [];
       const errors = [];
@@ -304,10 +301,46 @@ exports.batchDeleteObjects = async (req, res, next) => {
         errors
       });
     } catch (error) {
-      console.error(`Error in batch delete:`, error);
+      console.error(`Error in batch delete:`, error.message);
       res.status(500).json({ error: error.message });
     }
-  };
+};
+
+/**
+ * Move objects from one bucket to another 
+ */
+
+exports.moveObject = async (req,res,next) => {
+  try{
+
+    const { keys,sourceBucket, destinationBucket} = req.body;
+    const results = [];
+    const errors = [];
+
+    for (const key of keys) {
+      try {
+        await s3Service.moveObject(sourceBucket,destinationBucket,key);
+        results.push({ key, deleted: true });
+      } catch (error) {
+        errors.push({ key, error: error.message });
+      }
+    }
+
+    res.json({
+      success: true,
+      movedCount: results.length,
+      errorCount: errors.length,
+      results,
+      errors
+    });
+
+  }catch(err){
+    console.error(`Error moving objects:`, error.message);
+    res.status(500).json({ error: error.message });
+  }
+}
+
+
 
 /**
  * Show object details

@@ -29,12 +29,20 @@ app.use(morgan('dev')); // Logging
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(methodOverride('_method')); // Support PUT/DELETE in forms
+
 app.use(fileUpload({
   createParentPath: true,
   limits: { 
-    fileSize: 5 * 1024 * 1024 * 1024 // 5GB limit
+    fileSize: 5 * 1024 * 1024 * 1024, // 5GB limit per file
+    //files: 10, // Maximum 10 files per upload
   },
+  useTempFiles: true,
+  tempFileDir: '/tmp/',
+  abortOnLimit: true,
+  safeFileNames: true,
+  preserveExtension: true
 }));
+
 
 // Static files
 app.use(express.static(path.join(__dirname, 'public')));
@@ -69,18 +77,6 @@ app.use((err, req, res, next) => {
 });
 
 
-app.use(fileUpload({
-  createParentPath: true,
-  limits: { 
-    fileSize: 5 * 1024 * 1024 * 1024, // 5GB limit per file
-    files: 10, // Maximum 10 files per upload
-  },
-  useTempFiles: true,
-  tempFileDir: '/tmp/',
-  abortOnLimit: true,
-  safeFileNames: true,
-  preserveExtension: true
-}));
 
 // Start server
 const PORT = process.env.PORT || 3000;

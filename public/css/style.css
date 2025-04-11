@@ -262,3 +262,26 @@ div.dataTables_processing {
 table.dataTable tbody tr:hover {
   background-color: rgba(0, 0, 0, 0.05);
 }
+
+.batch-delete-files-list {
+  background: #f0f0f0;
+  padding: 20px;
+  margin: 10px 0px 10px 0px;
+  border-radius: 6px;
+  line-height: 1.6;
+  max-height: 150px;
+  font-size: 14px;
+  font-weight: 400;
+  overflow-y: auto;
+  color: cadetblue;
+}
+
+.text-danger {
+  --bs-text-opacity: 1;
+  color: rgba(var(--bs-danger-rgb),var(--bs-text-opacity))!important;
+  text-align: right;
+  font-size: 11px;
+}
+select#destinationBucket {
+  margin: 10px 0px 20px 0px;
+}
