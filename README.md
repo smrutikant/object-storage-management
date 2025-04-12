@@ -16,6 +16,7 @@ A full-featured Express.js application for managing S3 buckets and objects with 
   - Upload files (single or multiple) with progress indicator
   - Download files
   - Delete files (single or batch)
+  - Delete folders (including all nested contents)
   - Move objects between buckets
   - Create folders
   - Batch selection and operations
@@ -89,6 +90,7 @@ A full-featured Express.js application for managing S3 buckets and objects with 
 
 - **Navigate Folders**: Click on folder names to browse their contents
 - **Create Folder**: Click "New Folder" button and enter a folder name
+- **Delete Folder**: Click the delete icon next to a folder to remove it and all its contents
 - **Upload Files**: 
   - Click "Upload File" button 
   - Select one or multiple files (up to 10)
@@ -236,6 +238,15 @@ If moving files between buckets fails:
 2. Check permissions on both buckets
 3. Ensure the object name doesn't already exist in the destination bucket
 4. For large files, check if the operation times out (adjust timeout settings if needed)
+
+### Folder Delete Issues
+
+If folder deletion fails:
+
+1. Verify you have proper permissions to delete all objects in the folder
+2. For folders with many objects, check if the operation times out
+3. Ensure no other processes are currently accessing objects in the folder
+4. Check server logs for specific error messages if deletion fails
 
 ### Browser Compatibility
 
