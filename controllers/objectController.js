@@ -397,4 +397,20 @@ exports.showObjectDetails = async (req, res, next) => {
     next(error);
   }
 };
+/**
+ * Delete folder
+ */
+
+exports.deleteFolder = async(req,res,next)=>{
+  try{
+    const {bucketName,folderPath} = req.body;
+    const data = await s3Service.deleteFolder(bucketName,folderPath);
+    res.json({
+      success: true,
+      data:data
+    });
+  }catch(error){
+    next(error);
+  }
+}
 module.exports = exports;

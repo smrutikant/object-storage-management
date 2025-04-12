@@ -73,15 +73,17 @@
                         <strong>Bucket:</strong> <%= bucketName %>
                     </li>
                     <li class="list-group-item">
-                        <strong>Full Path:</strong> <code><%= objectKey %></code>
+                        <div style="display: flex ; gap: 10px; justify-content: space-between; align-items: center;">
+                            <span>
+                                <strong>Full Path:</strong> 
+                                <code><%= objectKey %></code>
+                            </span>
+                            <a title="download" style="color: #0D0D0D;font-size: 20px;" href="/objects/<%= bucketName %>/<%= encodeURIComponent(objectKey) %>/download" >
+                                <i class="fa-regular fa-circle-down"></i>
+                            </a>
+                        </div>
                     </li>
                 </ul>
-                
-                <div class="mt-3">
-                    <a href="/objects/<%= bucketName %>/<%= encodeURIComponent(objectKey) %>/download" class="btn btn-success w-100">
-                        <i class="fas fa-download"></i> Download File
-                    </a>
-                </div>
             </div>
         </div>
     </div>

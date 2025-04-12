@@ -315,4 +315,64 @@ exports.getPublicUrl = (bucketName, key) => {
   return `${endpoint}/${bucketName}/${encodeURIComponent(key)}`;
 };
 
+/**
+ * Deletes all objects within a specified "folder" in an S3 bucket
+ * 
+ * @param {string} bucketName - The name of the S3 bucket
+ * @param {string} folderPath - The path of the folder to delete (e.g., "uploads/images")
+ * @returns {Promise<object>} - Result of the delete operation
+ * 
+ * Notes:
+ * - S3 doesn't actually have folders, just objects with key names that contain slashes
+ * - This function recursively deletes all objects with the specified prefix
+ * - Check the limit of total object that can be deleted at one go.
+ * - The function handles pagination automatically for folders with more than 1000 objects
+ * - Requires appropriate IAM permissions: s3:ListObjects and s3:DeleteObjects
+ */
+
+exports.deleteFolder = async(bucketName, folderPath) => {
+  // Ensure the folder path ends with a forward slash
+  const prefix = folderPath.endsWith('/') ? folderPath : `${folderPath}/`;
+  
+  console.log(`Deleting all objects with prefix ${prefix} from bucket ${bucketName}`);
+  
+  try {
+    // Step 1: List all objects in the folder
+    const listedObjects = await s3.listObjectsV2({
+      Bucket: bucketName,
+      Prefix: prefix
+    }).promise();
+    
+    if (!listedObjects.Contents || listedObjects.Contents.length === 0) {
+      console.log('No objects found to delete');
+      return;
+    }
+    
+    // Step 2: Prepare objects for deletion
+    const objectsToDelete = listedObjects.Contents.map(({ Key }) => ({ Key }));
+    
+    // Step 3: Delete the objects
+    const deleteParams = {
+      Bucket: bucketName,
+      Delete: { Objects: objectsToDelete }
+    };
+    
+    const deletedObjects = await s3.deleteObjects(deleteParams).promise();
+    
+    console.log(`Successfully deleted ${objectsToDelete.length} objects`);
+    
+    // Check if there are more objects to delete (pagination)
+    if (listedObjects.IsTruncated) {
+      // Recursively delete remaining objects
+      await deleteFolder(bucketName, folderPath);
+    }
+    
+    return deletedObjects;
+  } catch (err) {
+    console.error('Error deleting folder:', err);
+    throw err;
+  }
+}
+
+
 module.exports = exports;

@@ -11,6 +11,9 @@ router.post('/upload', objectController.uploadObject);
 // Create a folder
 router.post('/:bucketName/folder', objectController.createFolder);
 
+//Delete a folder
+router.post('/:bucketName/delete-folder', objectController.deleteFolder);
+
 // Batch delete objects
 router.post('/:bucketName/batch-delete', objectController.batchDeleteObjects);
 

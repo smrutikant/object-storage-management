@@ -255,11 +255,16 @@ function setupClipboardButtons() {
     });
 }
 
+
+function openNewFolderModal(){
+    const createNewfolder = new bootstrap.Modal(document.getElementById('createFolderModal'));
+    createNewfolder.show();
+}
 /**
  * Create folder in the current bucket path
  */
 function createFolder(bucketName, currentPrefix) {
-    const folderName = prompt('Enter folder name:');
+    const folderName = document.getElementById("newFolder").value;
     if (!folderName || folderName.trim() === '') return;
     
     // Create a zero-byte object with a trailing slash to represent folder
@@ -426,6 +431,52 @@ function moveObjects() {
     })
     .catch(error => {
         alert('Error deleting objects: ' + error.message);
+    });
+}
+
+
+/**
+ * Show delete folder modal
+ */
+function showDeleteFolderModal(bucketName,folderPath){
+    document.getElementById("targetedBucketName").value = bucketName;
+    document.getElementById("folderPathToBeDeleted").value = folderPath;
+    document.getElementById("folderPathName").textContent = folderPath;
+    const deleteFolderModal = new bootstrap.Modal(document.getElementById('deleteFolderModal'));
+    deleteFolderModal.show();
+}
+
+/**
+ * Delete a folder
+*/
+
+function deleteFolder(){
+    const bucketName = document.getElementById("targetedBucketName").value;
+    const folderPath = document.getElementById("folderPathToBeDeleted").value;
+
+    fetch(`/objects/${bucketName}/delete-folder`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+            bucketName: bucketName,
+            folderPath: folderPath
+        }),
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Failed to delete folder');
+        }
+        return response.json();
+    })
+    .then((data) => {
+        // Show success message and reload
+        //alert(`Successfully deleted ${data.deletedCount} file(s).${data.errorCount > 0 ? ` Failed to delete ${data.errorCount} file(s).` : ''}`);
+        window.location.href = "?message=" + `Successfully deleted folder ${folderPath}`;
+    })
+    .catch(error => {
+        alert('Error deleting folder: ' + error.message);
     });
 }
 

@@ -285,3 +285,18 @@ table.dataTable tbody tr:hover {
 select#destinationBucket {
   margin: 10px 0px 20px 0px;
 }
+.heartbeat-icon {
+  animation: heartbeat 1.5s ease-in-out infinite;
+}
+
+@keyframes heartbeat {
+  0% {
+      color: #ffffff;
+  }
+  50% {
+      color: #ffc107;
+  }
+  100% {
+      color: #ffffff;
+  }
+}
