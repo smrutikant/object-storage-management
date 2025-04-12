@@ -2,6 +2,284 @@
  * S3 Bucket Manager - Main JavaScript with DataTables enhancements
  */
 
+
+    /**
+     * Show folder structure
+     */
+
+
+    function showFolderTreeOverlay(paths,message) {
+        // Create styles
+        const styleElement = document.createElement('style');
+        styleElement.textContent = `
+            .tree-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.7);
+                z-index: 9999;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+            
+            .tree-container {
+                max-width: 90%;
+                max-height: 90vh;
+                width: 800px;
+                margin: 0 auto;
+                background-color: #f5f5f5;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                overflow: auto;
+                position: relative;
+            }
+            
+            .tree-title {
+                margin-top: 0;
+                margin-bottom: 15px;
+                color: #333;
+            }
+            
+            .tree-view {
+                padding: 10px;
+                background-color: white;
+                border-radius: 4px;
+                border: 1px solid #ddd;
+                overflow: auto;
+                max-height: calc(90vh - 100px);
+            }
+            
+            .tree-node {
+                margin-left: 20px;
+                position: relative;
+            }
+            
+            .node-content {
+                padding: 3px 5px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+            }
+            
+            .node-content:hover {
+                background-color: #f0f0f0;
+                border-radius: 3px;
+            }
+            
+            .folder-icon, .file-icon {
+                margin-right: 5px;
+                width: 16px;
+                text-align: center;
+            }
+            
+            .folder-icon {
+                color: #ffc107;
+            }
+            
+            .file-icon {
+                color: #2196f3;
+            }
+            
+            .toggle-icon {
+                width: 12px;
+                text-align: center;
+                margin-right: 5px;
+                font-size: 10px;
+                transition: transform 0.2s;
+            }
+            
+            .closed .toggle-icon {
+                transform: rotate(-90deg);
+            }
+            
+            .children {
+                margin-left: 10px;
+                padding-left: 10px;
+                border-left: 1px dashed #ccc;
+            }
+            
+            .closed .children {
+                display: none;
+            }
+            
+            .node-name.folder {
+                font-weight: 500;
+            }
+            
+            .close-button {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                background: #e0e0e0;
+                border: none;
+                border-radius: 50%;
+                width: 30px;
+                height: 30px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                font-size: 16px;
+                font-weight: bold;
+                color: #555;
+            }
+            
+            .close-button:hover {
+                background: #d0d0d0;
+            }
+        `;
+        document.head.appendChild(styleElement);
+    
+        // Convert flat paths to a tree structure
+        function buildTreeFromPaths(paths) {
+            const root = { name: 'root', children: {}, isFile: false };
+            
+            paths.forEach(item => {
+                const path = item.Key;
+                const parts = path.split('/').filter(Boolean);
+                
+                let current = root;
+                
+                parts.forEach((part, index) => {
+                    if (!current.children[part]) {
+                        current.children[part] = {
+                            name: part,
+                            children: {},
+                            isFile: index === parts.length - 1 && !path.endsWith('/')
+                        };
+                    }
+                    current = current.children[part];
+                });
+            });
+            
+            return root;
+        }
+    
+        // Convert the object tree to an array format for easier rendering
+        function convertToRenderableTree(node) {
+            return {
+                name: node.name,
+                isFile: node.isFile,
+                children: Object.values(node.children)
+                    .map(convertToRenderableTree)
+                    .sort((a, b) => {
+                        // Sort folders first, then files
+                        if (a.isFile !== b.isFile) {
+                            return a.isFile ? 1 : -1;
+                        }
+                        // Then sort alphabetically
+                        return a.name.localeCompare(b.name);
+                    })
+            };
+        }
+    
+        // Create HTML elements for the tree
+        function createTreeNode(node) {
+            const nodeElement = document.createElement('div');
+            nodeElement.className = node.isFile ? 'tree-node file' : 'tree-node folder';
+            
+            const nodeContent = document.createElement('div');
+            nodeContent.className = 'node-content';
+            
+            // Toggle button for folders
+            const toggleIcon = document.createElement('span');
+            toggleIcon.className = 'toggle-icon';
+            toggleIcon.innerHTML = '▼';
+            
+            if (!node.isFile) {
+                nodeContent.appendChild(toggleIcon);
+                
+                nodeContent.addEventListener('click', () => {
+                    nodeElement.classList.toggle('closed');
+                });
+            } else {
+                // Empty space for alignment
+                const spacer = document.createElement('span');
+                spacer.className = 'toggle-icon';
+                spacer.innerHTML = '&nbsp;';
+                nodeContent.appendChild(spacer);
+            }
+            
+            // Icon for folder or file
+            const icon = document.createElement('span');
+            icon.className = node.isFile ? 'file-icon' : 'folder-icon';
+            icon.innerHTML = node.isFile ? '📄' : '📁';
+            nodeContent.appendChild(icon);
+            
+            // Node name
+            const nodeName = document.createElement('span');
+            nodeName.className = node.isFile ? 'node-name file' : 'node-name folder';
+            nodeName.textContent = node.name;
+            nodeContent.appendChild(nodeName);
+            
+            nodeElement.appendChild(nodeContent);
+            
+            // Add children if any
+            if (node.children && node.children.length > 0) {
+                const childrenContainer = document.createElement('div');
+                childrenContainer.className = 'children';
+                
+                node.children.forEach(childNode => {
+                    childrenContainer.appendChild(createTreeNode(childNode));
+                });
+                
+                nodeElement.appendChild(childrenContainer);
+            }
+            
+            return nodeElement;
+        }
+    
+        // Create the overlay and tree structure
+        const overlayElement = document.createElement('div');
+        overlayElement.className = 'tree-overlay';
+        
+        const containerElement = document.createElement('div');
+        containerElement.className = 'tree-container';
+        
+        const titleElement = document.createElement('h2');
+        titleElement.className = 'tree-title';
+        titleElement.textContent = 'Deleted folder tree structure';
+        containerElement.appendChild(titleElement);
+        
+        // Add close button
+        const closeButton = document.createElement('button');
+        closeButton.className = 'close-button';
+        closeButton.innerHTML = '×';
+        closeButton.addEventListener('click', () => {
+            window.location.href = "?message=" + message;
+            document.body.removeChild(overlayElement);
+        });
+        containerElement.appendChild(closeButton);
+        
+        const treeViewElement = document.createElement('div');
+        treeViewElement.className = 'tree-view';
+        treeViewElement.id = 'tree-root-' + Math.random().toString(36).substring(2, 9); // Create unique ID
+        
+        containerElement.appendChild(treeViewElement);
+        overlayElement.appendChild(containerElement);
+        document.body.appendChild(overlayElement);
+        
+        // Close overlay when clicking outside the container
+        overlayElement.addEventListener('click', (e) => {
+            if (e.target === overlayElement) {
+                document.body.removeChild(overlayElement);
+            }
+        });
+        
+        // Build and render the tree
+        const treeData = buildTreeFromPaths(paths);
+        const renderableTree = convertToRenderableTree(treeData);
+        
+        // Add each top-level node to the tree
+        renderableTree.children.forEach(node => {
+            treeViewElement.appendChild(createTreeNode(node));
+        });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Auto-dismiss alerts after 5 seconds
     const alerts = document.querySelectorAll('.alert');
@@ -471,9 +749,11 @@ function deleteFolder(){
         return response.json();
     })
     .then((data) => {
+        console.table(data)
+        showFolderTreeOverlay(data.deleted,`Successfully deleted ${data.deleted.length} file(s)}`);
         // Show success message and reload
         //alert(`Successfully deleted ${data.deletedCount} file(s).${data.errorCount > 0 ? ` Failed to delete ${data.errorCount} file(s).` : ''}`);
-        window.location.href = "?message=" + `Successfully deleted folder ${folderPath}`;
+        //window.location.href = "?message=" + `Successfully deleted folder ${folderPath}`;
     })
     .catch(error => {
         alert('Error deleting folder: ' + error.message);
@@ -674,4 +954,19 @@ function initializeDataTables() {
             document.getElementById("moveObject").setAttribute("disabled",true);
         }
     });
+
+
+
+
+    
+    // Example usage:
+    // const paths = [
+    //     { "Key": "Hi/Teraform/Images/" },
+    //     { "Key": "Hi/Teraform/Images/New/" },
+    //     { "Key": "Hi/Teraform/Images/New/17439408341601j.peg" },
+    //     { "Key": "Hi/Teraform/Images/New/Myn-Logo-1280x720-01.png" },
+    //     { "Key": "Hi/Teraform/Images/Old/" },
+    //     { "Key": "Hi/Teraform/Images/Old/Mask-Group-10.png" }
+    // ];
+    // showFolderTreeOverlay(paths);
 }

@@ -407,7 +407,8 @@ exports.deleteFolder = async(req,res,next)=>{
     const data = await s3Service.deleteFolder(bucketName,folderPath);
     res.json({
       success: true,
-      data:data
+      deleted:data.Deleted,
+      error:data.Errors
     });
   }catch(error){
     next(error);
