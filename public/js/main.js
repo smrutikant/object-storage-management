@@ -750,7 +750,7 @@ function deleteFolder(){
     })
     .then((data) => {
         console.table(data)
-        showFolderTreeOverlay(data.deleted,`Successfully deleted ${data.deleted.length} file(s)}`);
+        showFolderTreeOverlay(data.deleted,`Successfully deleted ${data.deleted.length} file(s)`);
         // Show success message and reload
         //alert(`Successfully deleted ${data.deletedCount} file(s).${data.errorCount > 0 ? ` Failed to delete ${data.errorCount} file(s).` : ''}`);
         //window.location.href = "?message=" + `Successfully deleted folder ${folderPath}`;
