@@ -14,6 +14,7 @@ A full-featured Express.js application for managing S3 buckets and objects with 
   - Browse objects with folder navigation
   - Advanced search and filtering of files and folders
   - Upload files (single or multiple) with progress indicator
+  - **Upload folders** with structure preservation and progress tracking
   - Download files
   - Delete files (single or batch)
   - Delete folders (including all nested contents)
@@ -95,6 +96,13 @@ A full-featured Express.js application for managing S3 buckets and objects with 
   - Click "Upload File" button 
   - Select one or multiple files (up to 10)
   - Click "Upload Files" to start the upload
+- **Upload Folders**:
+  - Click "Upload Folder" button
+  - Use the folder selector to choose a folder from your computer
+  - Modern browsers (Chrome, Edge, Opera) offer improved folder selection without browser alerts
+  - The folder structure will be preserved during upload
+  - Maximum 10 files per folder and 5GB total size
+  - Watch real-time progress as the folder uploads
 - **Download File**: Click the download icon next to a file
 - **Delete File**: Click the delete icon next to a file
 - **Move File**: 
@@ -210,6 +218,38 @@ S3_FORCE_PATH_STYLE=true
 
 Set `S3_FORCE_PATH_STYLE=true` for most on-premise S3-compatible storage systems.
 
+## Folder Upload Guidelines
+
+When using the folder upload feature, keep these guidelines in mind:
+
+- **Maximum folder size:** 5 GB (total of all files)
+- **Maximum files per folder:** 10 files
+- **Maximum folder depth:** Unlimited (all nested subfolders will be preserved)
+- **All file types supported**
+- **Files with the same name will be overwritten**
+- **Folder structure will be preserved** when uploaded to S3
+- **Empty folders** will be ignored during upload
+- **File permissions and metadata** will not be preserved
+- **Files are processed sequentially** within the folder
+
+### Folder Upload Considerations:
+
+1. **Upload time:** The upload process may take significant time for large folders or files
+2. **Browser stability:** Keep the browser tab open during the entire upload process
+3. **Network reliability:** Ensure a stable internet connection for large folder uploads
+4. **Folder selection:** Some browsers may require special permissions to access folders
+5. **Naming conflicts:** Files with identical paths will overwrite existing files on S3
+6. **Progress indication:** Upload progress may appear to stall when processing large files
+
+### Browser Compatibility for Folder Upload
+
+The folder upload feature works best in:
+- Chrome 90+
+- Edge 90+
+- Opera 76+
+
+Firefox and Safari support folder uploads with the legacy method, but may show alerts when selecting multiple files.
+
 ## Troubleshooting
 
 ### Connection Issues
@@ -229,6 +269,16 @@ If file uploads are failing:
 2. Verify write permissions on the temp directory
 3. Ensure the bucket exists and has proper permissions
 4. Check server logs for detailed error messages
+
+### Folder Upload Issues
+
+If folder uploads are failing:
+
+1. Ensure your browser supports folder selection (use Chrome/Edge for best results)
+2. Check if you're exceeding the 10 files limit or 5GB total size limit
+3. Verify the temporary directory exists and is writable
+4. For large folders, try uploading subfolders separately
+5. Check that your prefix path is valid in the S3 bucket
 
 ### Move Operation Issues
 

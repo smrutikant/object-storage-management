@@ -5,6 +5,15 @@ const objectController = require('../controllers/objectController');
 // Show upload form
 router.get('/upload', objectController.showUploadForm);
 
+// Show upload form
+router.get('/upload-folder', objectController.showUploadFolderForm);
+
+//Upload folder
+router.post('/upload-folder', objectController.uploadFolder);
+
+// Status endpoint for checking upload progress
+router.get('/upload-status/:id', objectController.checkProgress);
+
 // Upload an object
 router.post('/upload', objectController.uploadObject);
 

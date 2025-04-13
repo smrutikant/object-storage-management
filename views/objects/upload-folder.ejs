@@ -1,0 +1,614 @@
+<style>
+    .container {
+        border: 1px solid #ddd;
+        padding: 20px;
+        border-radius: 5px;
+    }
+    .dropzone {
+        border: 2px dashed #ccc;
+        border-radius: 5px;
+        padding: 25px;
+        text-align: center;
+        margin: 20px 0;
+        cursor: pointer;
+    }
+    .dropzone:hover {
+        border-color: #999;
+    }
+    #file-list {
+        margin-top: 20px;
+    }
+    .file-item {
+        margin-bottom: 5px;
+    }
+    .hidden {
+        display: none;
+    }
+    .progress-container {
+        margin-top: 20px;
+        display: none;
+    }
+    .progress-bar {
+        height: 20px;
+        background-color: #f0f0f0;
+        border-radius: 5px;
+        margin-bottom: 10px;
+    }
+    .progress {
+        height: 100%;
+        background-color: #4CAF50;
+        border-radius: 5px;
+        width: 0%;
+        transition: width 0.3s;
+    }
+    button {
+        background-color: #4CAF50;
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    button:disabled {
+        background-color: #cccccc;
+    }
+    .status {
+        margin-top: 20px;
+    }
+    .file-count-warning {
+        color: #f44336;
+        font-weight: bold;
+        display: none;
+        margin-top: 10px;
+    }
+    .file-size-warning {
+        color: #f44336;
+        font-weight: bold;
+        display: none;
+        margin-top: 10px;
+    }
+</style>
+</head>
+<body>
+<div class="row">
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-file-upload me-1"></i> Folder Upload
+            </div>
+            <div class="card-body">
+                <form action="/objects/upload" method="POST" enctype="multipart/form-data" id="upload-form">
+                    <div class="mb-3">
+                        <label class="form-label">Destination</label>
+                        <div class="input-group">
+                            <span class="input-group-text">Bucket</span>
+                            <input type="text" class="form-control" id="bucket_name" value="<%= bucketName %>" readonly>
+                            <input type="hidden" name="bucketName" value="<%= bucketName %>">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Path</label>
+                        <div class="input-group">
+                            <span class="input-group-text">Prefix</span>
+                            <input type="text" class="form-control" name="prefix" value="<%= prefix %>" readonly>
+                        </div>
+                        <div class="form-text">
+                            Files will be uploaded to: <code><%= bucketName %>/<%= prefix %></code>
+                        </div>
+                    </div>
+                    
+                    <div class="upload-options mb-3">
+                        <div class="dropzone" id="dropzone">
+                            <p style="margin-bottom: 0;">Click to select a folder</p>
+                            <input type="file" id="folder-input" webkitdirectory directory multiple class="hidden">
+                        </div>
+                        
+                        <div id="modern-picker" class="d-none">
+                            <button type="button" id="directory-picker-button" class="btn btn-outline-primary mb-2">
+                                <i class="fas fa-folder-open"></i> Choose Folder (Modern Browser)
+                            </button>
+                            <div class="form-text">
+                                Use this option in Chrome, Edge, or Opera to avoid browser alerts.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="file-count-warning" class="file-count-warning alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> Warning: More than 10 files selected. Only the first 10 files will be uploaded.
+                    </div>
+                    
+                    <div id="file-size-warning" class="file-size-warning alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> Warning: Total size exceeds 5 GB. Some files may not be uploaded.
+                    </div>
+                    
+                    <div id="file-list">
+                        <p>No folder selected</p>
+                    </div>
+    
+                    <div class="progress-container" id="progress-container">
+                        <div class="progress-bar">
+                            <div class="progress" id="progress"></div>
+                        </div>
+                        <div id="progress-text">0%</div>
+                    </div>
+                    
+                    <div class="status" id="status"></div>
+                    
+                    <div class="progress mb-3 d-none" id="upload-progress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" 
+                             aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%">0%</div>
+                    </div>
+                    
+                    <div class="d-grid gap-2" style="display: flex !important;justify-content: flex-end;">
+                        <button type="button" id="upload-button" class="btn btn-primary" disabled>
+                            <i class="fas fa-cloud-upload-alt"></i> Upload Folder
+                        </button>
+                        <a href="/buckets/<%= bucketName %>/objects<%= prefix ? '?prefix=' + encodeURIComponent(prefix) : '' %>" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-info-circle me-1"></i> Upload Guidelines
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">File Upload Information</h5>
+                <ul class="list-group list-group-flush mb-3">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Maximum file size
+                        <span class="badge bg-primary rounded-pill">5 GB</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Maximum files
+                        <span class="badge bg-primary rounded-pill">10</span>
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-check-circle text-success me-1"></i> All file types supported
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-info-circle me-1"></i> Files with the same name will be overwritten
+                    </li>
+                    
+                    <li class="list-group-item">
+                        <i class="fa-solid fa-folder-tree me-1"></i> Folder structure will be preserved when uploaded
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-circle-exclamation  me-1"></i> Empty folders will be ignored during upload
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-lock me-1"></i> File permissions and metadata will not be preserved
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-list-check  me-1"></i> Files are processed sequentially within the folder
+                    </li>
+                </ul>
+
+                <h5>Considerations</h5>
+                    <ul class="list-group list-group-flush mb-3">
+                    <li class="list-group-item"><i class="fa-solid fa-clock me-1"></i> Upload time: The upload process may take significant time for large folders or files</li>
+                    <li class="list-group-item"><i class="fa-solid fa-window-maximize me-1"></i> Browser stability: Keep the browser tab open during the entire upload process</li>
+                    <li class="list-group-item"><i class="fa-solid fa-wifi me-1"></i> Network reliability: Ensure a stable internet connection for large folder uploads</li>
+                    <li class="list-group-item"><i class="fa-solid fa-fingerprint  me-1"></i> Folder selection: Some browsers may require special permissions to access folders</li>
+                    <li class="list-group-item"><i class="fa-solid fa-rotate-right me-1"></i> Naming conflicts: Files with identical paths will overwrite existing files on S3</li>
+                    <li class="list-group-item"><i class="fa-solid fa-spinner me-1"></i> Progress indication: Upload progress may appear to stall when processing large files</li>
+                </ul>
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i> The upload process may take some time for large files.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const dropzone = document.getElementById('dropzone');
+        const folderInput = document.getElementById('folder-input');
+        const fileList = document.getElementById('file-list');
+        const uploadButton = document.getElementById('upload-button');
+        const progressContainer = document.getElementById('progress-container');
+        const progress = document.getElementById('progress');
+        const progressText = document.getElementById('progress-text');
+        const status = document.getElementById('status');
+        const fileCountWarning = document.getElementById('file-count-warning');
+        const fileSizeWarning = document.getElementById('file-size-warning');
+        const modernPicker = document.getElementById('modern-picker');
+        const directoryPickerButton = document.getElementById('directory-picker-button');
+        const uploadForm = document.getElementById('upload-form');
+        const uploadProgress = document.getElementById('upload-progress');
+        const progressBar = uploadProgress.querySelector('.progress-bar');
+        
+        let selectedFiles = [];
+        let basePath = '';
+        let selectedDirectory = null;
+        let currentUploadId = null;
+        let statusInterval = null;
+        
+        // Check if File System Access API is supported for the modern picker
+        const isFileSystemAccessSupported = 'showDirectoryPicker' in window;
+        
+        if (isFileSystemAccessSupported) {
+            modernPicker.classList.remove('d-none');
+        }
+        
+        // File size formatter
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // Calculate total size of files
+        function calculateTotalSize(files) {
+            return files.reduce((total, file) => total + file.size, 0);
+        }
+        
+        // Validate selected files against limits
+        function validateFiles(files) {
+            const totalSize = calculateTotalSize(files);
+            const fileCount = files.length;
+            
+            // Check file count limit
+            if (fileCount > 10) {
+                fileCountWarning.style.display = 'block';
+                // Trim files to maximum 10
+                return files.slice(0, 10);
+            } else {
+                fileCountWarning.style.display = 'none';
+            }
+            
+            // Check size limit (5GB)
+            const maxSize = 5 * 1024 * 1024 * 1024; // 5GB in bytes
+            if (totalSize > maxSize) {
+                fileSizeWarning.style.display = 'block';
+                
+                // Try to fit files under the limit
+                let validatedFiles = [];
+                let currentSize = 0;
+                
+                for (const file of files) {
+                    if (currentSize + file.size <= maxSize) {
+                        validatedFiles.push(file);
+                        currentSize += file.size;
+                    } else {
+                        break;
+                    }
+                }
+                
+                return validatedFiles;
+            } else {
+                fileSizeWarning.style.display = 'none';
+            }
+            
+            return files;
+        }
+        
+        // Display file list with details
+        function displayFileList(files) {
+            const totalSize = calculateTotalSize(files);
+            
+            fileList.innerHTML = `
+                <div class="alert alert-info">
+                    <p class="mb-1"><strong>Selected folder:</strong> ${basePath}</p>
+                    <p class="mb-1"><strong>Files:</strong> ${files.length}</p>
+                    <p class="mb-0"><strong>Total size:</strong> ${formatFileSize(totalSize)}</p>
+                </div>
+            `;
+            
+            // Display files with their sizes
+            if (files.length > 0) {
+                fileList.innerHTML += '<div class="list-group mt-3">';
+                
+                // Display first 10 files as a sample
+                const sampleFiles = files.slice(0, 10);
+                const fileListHtml = sampleFiles.map(file => {
+                    const filePath = file.relativePath || file.webkitRelativePath;
+                    return `
+                        <div class="list-group-item">
+                            <i class="far fa-file me-2"></i>${filePath}
+                            <span class="badge bg-secondary ms-1">${formatFileSize(file.size)}</span>
+                        </div>
+                    `;
+                }).join('');
+                
+                fileList.innerHTML += fileListHtml;
+                
+                if (files.length > 10) {
+                    fileList.innerHTML += `<div class="list-group-item text-muted">... and ${files.length - 10} more files</div>`;
+                }
+                
+                fileList.innerHTML += '</div>';
+            }
+            
+            // Enable upload button once files are selected
+            uploadButton.disabled = false;
+        }
+        
+        // Modern File System Access API method
+        if (isFileSystemAccessSupported) {
+            directoryPickerButton.addEventListener('click', async function() {
+                try {
+                    // Show the directory picker
+                    selectedDirectory = await window.showDirectoryPicker();
+                    basePath = selectedDirectory.name;
+                    
+                    // Collect all files from the directory
+                    selectedFiles = [];
+                    
+                    status.innerHTML = '<div class="alert alert-info">Reading folder contents...</div>';
+                    
+                    // Function to recursively read directories
+                    async function readDirectory(dirHandle, path = '') {
+                        const files = [];
+                        
+                        for await (const entry of dirHandle.values()) {
+                            const entryPath = path ? `${path}/${entry.name}` : entry.name;
+                            
+                            if (entry.kind === 'file') {
+                                const fileHandle = entry;
+                                const file = await fileHandle.getFile();
+                                // Add the path info so we can reconstruct it later
+                                file.relativePath = entryPath;
+                                files.push(file);
+                            } else if (entry.kind === 'directory') {
+                                const subDirFiles = await readDirectory(entry, entryPath);
+                                files.push(...subDirFiles);
+                            }
+                        }
+                        
+                        return files;
+                    }
+                    
+                    // Read all files from the selected directory
+                    let allFiles = await readDirectory(selectedDirectory);
+                    
+                    // Validate files against limits
+                    selectedFiles = validateFiles(allFiles);
+                    
+                    // Display selected files
+                    displayFileList(selectedFiles);
+                    
+                    status.innerHTML = '';
+                } catch (error) {
+                    console.error('Error selecting directory:', error);
+                    if (error.name === 'AbortError') {
+                        status.innerHTML = '<div class="alert alert-warning">Folder selection was cancelled.</div>';
+                    } else {
+                        status.innerHTML = `<div class="alert alert-danger">Error selecting folder: ${error.message}</div>`;
+                    }
+                }
+            });
+        }
+        
+        // Legacy method - Handle folder selection through the dropzone
+        dropzone.addEventListener('click', function() {
+            folderInput.click();
+        });
+        
+        folderInput.addEventListener('change', function(e) {
+            const files = Array.from(e.target.files);
+            
+            if (files.length === 0) {
+                return;
+            }
+            
+            selectedDirectory = null; // Reset modern method selection
+            
+            // Get the base folder path
+            if (files.length > 0 && files[0].webkitRelativePath) {
+                basePath = files[0].webkitRelativePath.split('/')[0];
+            }
+            
+            // Validate files against limits
+            selectedFiles = validateFiles(files);
+            
+            // Display selected files
+            displayFileList(selectedFiles);
+        });
+        
+        // Handle upload button click
+        uploadButton.addEventListener('click', function(e) {
+            e.preventDefault(); // Prevent form submission
+            
+            if (selectedFiles.length === 0) {
+                status.innerHTML = '<div class="alert alert-warning">Please select a folder first.</div>';
+                return;
+            }
+            console.table(selectedFiles);
+            uploadFiles(selectedFiles);
+        });
+        
+        // Check upload status from the server
+        async function checkUploadStatus(uploadId) {
+            try {
+                const response = await fetch(`/objects/upload-status/${uploadId}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    return data;
+                }
+            } catch (error) {
+                console.error('Error checking upload status:', error);
+            }
+            return null;
+        }
+        
+        // Poll for upload status updates
+        function startStatusPolling(uploadId) {
+            // Clear any existing polling
+            if (statusInterval) {
+                clearInterval(statusInterval);
+            }
+            
+            // Set up new polling
+            statusInterval = setInterval(async () => {
+                const statusData = await checkUploadStatus(uploadId);
+                if (statusData) {
+                    // Update progress based on completed/total files
+                    const percentComplete = Math.round((statusData.completed / statusData.total) * 100);
+                    progress.style.width = `${percentComplete}%`;
+                    progressText.textContent = `${percentComplete}%`;
+                    progressBar.style.width = `${percentComplete}%`;
+                    progressBar.textContent = `${percentComplete}%`;
+                    
+                    // Update status message
+                    if (statusData.completed > 0) {
+                        status.innerHTML = `
+                            <div class="alert alert-info">
+                                <p class="mb-1">Uploading: ${statusData.completed} of ${statusData.total} files completed</p>
+                                ${statusData.failed > 0 ? `<p class="mb-0 text-danger">Failed: ${statusData.failed} files</p>` : ''}
+                            </div>
+                        `;
+                    }
+                    
+                    // If upload is complete, stop polling
+                    if (!statusData.inProgress) {
+                        clearInterval(statusInterval);
+                        statusInterval = null;
+                        
+                        // Set progress to 100%
+                        progress.style.width = '100%';
+                        progressText.textContent = '100%';
+                        progressBar.style.width = '100%';
+                        progressBar.textContent = '100%';
+                        
+                        if (statusData.failed === 0) {
+                            status.innerHTML = `<div class="alert alert-success">Upload completed successfully!</div>`;
+                        } else {
+                            status.innerHTML = `
+                                <div class="alert alert-warning">
+                                    Upload completed with some issues.
+                                    <p>Successfully uploaded: ${statusData.completed} files</p>
+                                    <p>Failed: ${statusData.failed} files</p>
+                                </div>
+                            `;
+                        }
+                        
+                        // Re-enable upload button
+                        uploadButton.disabled = false;
+                    }
+                }
+            }, 2000); // Check every 2 seconds
+        }
+        
+        // Function to upload files
+        async function uploadFiles(files) {
+            // Show progress
+            progressContainer.style.display = 'block';
+            uploadProgress.classList.remove('d-none');
+            uploadButton.disabled = true;
+            status.innerHTML = '<div class="alert alert-info">Preparing files for upload...</div>';
+            
+            // Create FormData
+            const formData = new FormData();
+            
+            // Get form fields and add them to FormData
+            const bucketName = document.getElementById("bucket_name").value;
+            const prefix = document.querySelector('input[name="prefix"]').value;
+            
+            formData.append('bucketName', bucketName);
+            formData.append('prefix', prefix);
+            
+            // Add base path information
+            formData.append('basePathData', JSON.stringify({ basePath }));
+            
+            // Add each file to FormData with the correct path
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                
+                // Store path information based on selection method
+                if (selectedDirectory) {
+                    // For File System Access API, we have relativePath
+                    file.originalPath = file.relativePath;
+                } else {
+                    // For legacy method, use webkitRelativePath
+                    file.originalPath = file.webkitRelativePath;
+                }
+                
+                // Add file to FormData
+                formData.append('files', file);
+                
+                
+                // Add path information as separate field
+                formData.append(`originalPath_${i}`, file.originalPath);
+                
+                // Update status periodically for large uploads
+                if (i % 5 === 0 || i === files.length - 1) {
+                    status.innerHTML = `<div class="alert alert-info">Preparing files for upload... (${i+1}/${files.length})</div>`;
+                    // Allow UI to update
+                    await new Promise(resolve => setTimeout(resolve, 0));
+                }
+            }
+            
+            // Use XMLHttpRequest for upload with progress tracking
+            const xhr = new XMLHttpRequest();
+            
+            xhr.open('POST', '/objects/upload-folder', true);
+            
+            // Track upload progress
+            xhr.upload.onprogress = function(e) {
+                if (e.lengthComputable) {
+                    const percentComplete = Math.round((e.loaded / e.total) * 100);
+                    progress.style.width = percentComplete + '%';
+                    progressText.textContent = percentComplete + '%';
+                    progressBar.style.width = percentComplete + '%';
+                    progressBar.textContent = percentComplete + '%';
+                }
+            };
+            
+            xhr.onload = function() {
+                if (xhr.status === 200 || xhr.status === 201) {
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        
+                        // If the response contains an uploadId, start polling for status
+                        if (response.uploadId) {
+                            currentUploadId = response.uploadId;
+                            startStatusPolling(currentUploadId);
+                        } else {
+                            // Set progress to 100% on completion
+                            progress.style.width = '100%';
+                            progressText.textContent = '100%';
+                            progressBar.style.width = '100%';
+                            progressBar.textContent = '100%';
+                            
+                            status.innerHTML = `<div class="alert alert-success">${response.message || 'Upload completed successfully!'}</div>`;
+                            
+                            // Re-enable upload button
+                            uploadButton.disabled = false;
+                        }
+                    } catch (error) {
+                        // Handle JSON parse error
+                        console.error('Error parsing response:', error);
+                        status.innerHTML = '<div class="alert alert-success">Upload completed successfully, but could not parse detailed response.</div>';
+                        uploadButton.disabled = false;
+                    }
+                } else {
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        status.innerHTML = `<div class="alert alert-danger">Upload failed: ${response.message || 'Unknown error'}</div>`;
+                    } catch (error) {
+                        status.innerHTML = `<div class="alert alert-danger">Upload failed with status: ${xhr.status}</div>`;
+                    }
+                    uploadButton.disabled = false;
+                }
+            };
+            
+            xhr.onerror = function() {
+                status.innerHTML = '<div class="alert alert-danger">Upload failed. Please check your connection and try again.</div>';
+                uploadButton.disabled = false;
+            };
+            
+            // Start the upload
+            xhr.send(formData);
+            status.innerHTML = '<div class="alert alert-info">Uploading files to S3... 0%</div>';
+        }
+    });
+</script>

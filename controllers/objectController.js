@@ -1,5 +1,9 @@
 const s3Service = require('../services/s3Service');
 const path = require('path');
+const crypto = require('crypto');
+let uploadStatus = {};
+const fs = require('fs-extra');
+
 
 /**
  * Show object upload form
@@ -19,46 +23,185 @@ exports.showUploadForm = (req, res) => {
   });
 };
 
+
 /**
- * Upload an object to a bucket
+ * Show object upload form
  */
-// exports.uploadObject = async (req, res, next) => {
-//   try {
-//     const { bucketName, prefix } = req.body;
+exports.showUploadFolderForm = (req, res) => {
+  const { bucketName, prefix } = req.query;
+  
+  if (!bucketName) {
+    return res.redirect('/buckets');
+  }
+  
+  res.render('objects/upload-folder', { 
+    title: 'Upload Folder',
+    bucketName,
+    prefix: prefix || '',
+    messages: {}
+  });
+};
+
+
+/**
+ * Check upload progress
+ */
+
+exports.checkProgress = (req,res) => {
+  const id = req.params.id;
+  if (uploadStatus[id]) {
+    res.json(uploadStatus[id]);
+  } else {
+    res.status(404).json({ error: 'Upload not found' });
+  }
+}
+
+/**
+ * Upload folder to bucket
+ */
+
+exports.uploadFolder = async (req, res,next) => {
+  try {
+    // Check if files were uploaded
+    if (!req.files || Object.keys(req.files).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'No files were uploaded'
+      });
+    }
+
+    // Get the files
+    const uploadedFiles = req.files.files;
+    let files = [];
+    const BUCKET_NAME = req.body.bucketName;
     
-//     if (!req.files || Object.keys(req.files).length === 0) {
-//       return res.render('objects/upload', { 
-//         title: 'Upload Object',
-//         bucketName,
-//         prefix: prefix || '',
-//         messages: { error: 'No files were uploaded' }
-//       });
-//     }
+    // Handle single file or multiple files
+    if (Array.isArray(uploadedFiles)) {
+      files = uploadedFiles;
+    } else {
+      files = [uploadedFiles];
+    }
     
-//     const file = req.files.file;
+    // Ensure we don't exceed file count limit
+    if (files.length > 10) {
+      return res.status(400).json({
+        success: false,
+        message: 'Maximum 10 files are allowed'
+      });
+    }
     
-//     // Create the full key with the prefix if it exists
-//     const objectKey = prefix 
-//       ? `${prefix}${file.name}` 
-//       : file.name;
+    // Parse base path data for folder structure
+    const basePathData = req.body.basePathData ? JSON.parse(req.body.basePathData) : { basePath: '' };
+    const { basePath } = basePathData;
     
-//     await s3Service.uploadObject(bucketName, file, objectKey);
+    console.log(`Received ${files.length} files for upload`);
     
-//     // Redirect back to bucket contents
-//     const redirectUrl = `/buckets/${bucketName}/objects?` + 
-//       (prefix ? `prefix=${encodeURIComponent(prefix)}&` : '') + 
-//       `message=${encodeURIComponent(`File "${file.name}" uploaded successfully`)}`;
+    // Generate a unique ID for this upload batch
+    const uploadId = crypto.randomBytes(16).toString('hex');
+    uploadStatus[uploadId] = {
+      total: files.length,
+      completed: 0,
+      failed: 0,
+      inProgress: true,
+      startTime: Date.now()
+    };
     
-//     res.redirect(redirectUrl);
-//   } catch (error) {
-//     res.render('objects/upload', { 
-//       title: 'Upload Object',
-//       bucketName: req.body.bucketName,
-//       prefix: req.body.prefix || '',
-//       messages: { error: `Upload failed: ${error.message}` }
-//     });
-//   }
-// };
+    // Process each file and prepare for S3 upload
+    const uploadPromises = files.map((file, index) => {
+      // Get file path information
+      let originalPath;
+      
+      // Extract path information from request body metadata
+      if (req.body[`originalPath_${index}`]) {
+        originalPath = req.body[`originalPath_${index}`];
+      } else if (file.name && basePath) {
+        // Fallback to simple path construction
+        originalPath = path.join(basePath, file.name);
+      } else {
+        // Last resort, just use the file name
+        originalPath = file.name;
+      }
+      
+      // Create S3 key (preserving folder structure)
+      const s3Key = originalPath.replace(/\\/g, '/');
+      
+      console.log(`Preparing to upload: ${s3Key}`);
+      
+      // Set S3 upload parameters
+      const params = {
+        Bucket: BUCKET_NAME,
+        Key: s3Key,
+        Body: fs.createReadStream(file.tempFilePath)
+      };
+      
+      // Set content type based on file extension
+      const ext = path.extname(file.name).toLowerCase();
+      if (ext === '.html') params.ContentType = 'text/html';
+      else if (ext === '.css') params.ContentType = 'text/css';
+      else if (ext === '.js') params.ContentType = 'application/javascript';
+      else if (ext === '.jpg' || ext === '.jpeg') params.ContentType = 'image/jpeg';
+      else if (ext === '.png') params.ContentType = 'image/png';
+      else if (ext === '.pdf') params.ContentType = 'application/pdf';
+      
+      const upld = s3Service.uploadObject(BUCKET_NAME,file,s3Key);
+      // Upload to S3
+      return upld.then(data => {
+          console.log(`Uploaded: ${s3Key} to ${data.Location}`);
+          // Update status
+          uploadStatus[uploadId].completed++;
+          
+          // Clean up temp file
+          fs.unlinkSync(file.tempFilePath);
+          return data;
+        })
+        .catch(err => {
+          console.error(`Error uploading ${s3Key}: ${err.message}`);
+          // Update status
+          uploadStatus[uploadId].failed++;
+          
+          // Clean up temp file even on error
+          fs.unlinkSync(file.tempFilePath);
+          throw err;
+        });
+    });
+    
+    // Process uploads with Promise.allSettled to handle partial failures
+    const results = await Promise.allSettled(uploadPromises);
+    
+    // Calculate stats
+    const successCount = results.filter(result => result.status === 'fulfilled').length;
+    const failCount = results.filter(result => result.status === 'rejected').length;
+    
+    // Mark upload as completed
+    uploadStatus[uploadId].inProgress = false;
+    uploadStatus[uploadId].endTime = Date.now();
+    uploadStatus[uploadId].duration = (uploadStatus[uploadId].endTime - uploadStatus[uploadId].startTime) / 1000;
+    
+    // Cleanup old upload statuses to prevent memory leaks
+    // Keep status for 30 minutes then delete
+    setTimeout(() => {
+      delete uploadStatus[uploadId];
+    }, 30 * 60 * 1000);
+    
+    res.json({
+      success: true,
+      message: `Successfully uploaded ${successCount} files to S3${failCount > 0 ? `, ${failCount} files failed` : ''}`,
+      details: {
+        total: files.length,
+        successful: successCount,
+        failed: failCount,
+        uploadId: uploadId,
+        duration: uploadStatus[uploadId].duration + ' seconds'
+      }
+    });
+  } catch (error) {
+    console.error('Upload error:', error);
+    res.status(500).json({
+      success: false,
+      message: `Error: ${error.message}`
+    });
+  }
+};
 
 
 /**

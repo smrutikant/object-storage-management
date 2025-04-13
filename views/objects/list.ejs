@@ -28,6 +28,11 @@
         <a href="/objects/upload?bucketName=<%= bucketName %>&prefix=<%= encodeURIComponent(prefix) %>" class="btn btn-sm btn-primary me-2">
             <i class="fas fa-upload"></i> Upload File
         </a>
+        <a href="/objects/upload-folder?bucketName=<%= bucketName %>&prefix=<%= encodeURIComponent(prefix) %>" class="btn btn-sm btn-primary me-2" style="position: relative;">
+            <i class="fa-solid fa-folder"></i>
+            <i class="fa-solid fa-arrow-up" style="position: absolute;color: #0d6efd;font-size: 9px;top: 15px;left: 11px;font-weight: bold;"></i> Upload Folder
+            <!-- <i class="fa-solid fa-circle-arrow-up"></i> -->
+        </a>
         <button class="btn btn-sm btn-primary me-2" onclick="openNewFolderModal()">
             <i class="fas fa-folder-plus"></i> New Folder
         </button>
