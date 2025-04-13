@@ -308,3 +308,7 @@ a.btn-primary{
   display: flex;
   gap: 5px;
 }
+a.btn-primary.rowbtn{
+  height: auto !important;
+  display: inline-block;
+}

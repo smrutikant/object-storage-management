@@ -55,7 +55,7 @@
                 </div>
                 <div class="card-body text-center">
                     <object data="<%= object.publicUrl %>" type="application/pdf" width="500" height="700">
-                        <p>Your browser doesn't support this object. <a href="/objects/<%= bucketName %>/<%= encodeURIComponent(object.key) %>/download">Download the PDF</a> instead.</p>
+                        <p>Your browser doesn't support this object. <a href="/objects/<%= bucketName %>/<%= encodeURIComponent(object.key) %>/download">Download the File</a> instead.</p>
                     </object>
                     <!-- For public S3, direct URL might work -->
                     <!-- <img src="<%= object.publicUrl %>" class="img-fluid" alt="<%= object.name %>" style="max-height: 400px;" onerror="this.onerror=null; this.src='/objects/<%= bucketName %>/<%= encodeURIComponent(object.key) %>/download'; this.classList.add('preview-fallback');"> -->
