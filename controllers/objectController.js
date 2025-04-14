@@ -83,12 +83,12 @@ exports.uploadFolder = async (req, res,next) => {
     }
     
     // Ensure we don't exceed file count limit
-    if (files.length > 10) {
-      return res.status(400).json({
-        success: false,
-        message: 'Maximum 10 files are allowed'
-      });
-    }
+    // if (files.length > 10) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: 'Maximum 10 files are allowed'
+    //   });
+    // }
     
     // Parse base path data for folder structure
     const basePathData = req.body.basePathData ? JSON.parse(req.body.basePathData) : { basePath: '' };

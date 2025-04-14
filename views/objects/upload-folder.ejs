@@ -257,7 +257,7 @@
             const fileCount = files.length;
             
             // Check file count limit
-            if (fileCount > 10) {
+            if (fileCount > 10000000) {
                 fileCountWarning.style.display = 'block';
                 // Trim files to maximum 10
                 return files.slice(0, 10);
@@ -308,7 +308,7 @@
                 fileList.innerHTML += '<div class="list-group mt-3">';
                 
                 // Display first 10 files as a sample
-                const sampleFiles = files.slice(0, 10);
+                const sampleFiles = files;
                 const fileListHtml = sampleFiles.map(file => {
                     const filePath = file.relativePath || file.webkitRelativePath;
                     return `
