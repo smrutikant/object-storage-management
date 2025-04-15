@@ -22,6 +22,12 @@ A full-featured Express.js application for managing S3 buckets and objects with 
   - Create folders
   - Batch selection and operations
 
+- **Access Control**:
+  - View and manage object ACL permissions
+  - Set objects as private or public
+  - Support for common ACL presets (private, public-read, authenticated-read, etc.)
+  - Quick permission changes directly from the object details page
+
 - **Sharing**:
   - Generate pre-signed URLs with configurable expiration
   - Show public URLs
@@ -111,6 +117,21 @@ A full-featured Express.js application for managing S3 buckets and objects with 
   - Click "Move" to transfer the file(s) to the new bucket
 - **View File Details**: Click on the file name to view details
 - **Share File**: Click the share icon to generate shareable links
+
+### Managing ACL Permissions
+
+- **View ACL**: Object details page displays current ACL permissions
+- **Change ACL**: Select from the dropdown of available ACL permissions:
+  - **Private**: No public access
+  - **Public Read**: Anyone can read the object
+  - **Authenticated Read**: Only authenticated users can read
+  - **Bucket Owner Read**: Bucket owner has read access
+  - **Bucket Owner Full Control**: Bucket owner has full control
+- **Update Permissions**: Click "Update Permissions" button to apply changes
+- **Permission Effects**: 
+  - Setting to "public-read" makes files accessible without authentication
+  - Setting to "private" restricts access to authenticated users only
+- **Batch ACL Changes**: Coming in a future update
 
 ### Batch Operations
 
@@ -218,6 +239,16 @@ S3_FORCE_PATH_STYLE=true
 
 Set `S3_FORCE_PATH_STYLE=true` for most on-premise S3-compatible storage systems.
 
+### ACL Permissions
+
+By default, the application supports standard S3 ACL permissions. The available ACL options are:
+
+- **private**: Owner gets FULL_CONTROL. No one else has access rights.
+- **public-read**: Owner gets FULL_CONTROL. The AllUsers group gets READ access.
+- **authenticated-read**: Owner gets FULL_CONTROL. The AuthenticatedUsers group gets READ access.
+- **bucket-owner-read**: Object owner gets FULL_CONTROL. Bucket owner gets READ access.
+- **bucket-owner-full-control**: Both the object owner and the bucket owner get FULL_CONTROL.
+
 ## Folder Upload Guidelines
 
 When using the folder upload feature, keep these guidelines in mind:
@@ -269,6 +300,17 @@ If file uploads are failing:
 2. Verify write permissions on the temp directory
 3. Ensure the bucket exists and has proper permissions
 4. Check server logs for detailed error messages
+
+### ACL Permission Issues
+
+If you're having problems with ACL permissions:
+
+1. Verify that your S3 implementation supports the ACL you're trying to set
+2. Check that your S3 credentials have permission to modify ACLs
+3. Ensure the bucket policy doesn't override object ACLs
+4. If an object shows the wrong ACL even after updating, try refreshing the page
+5. Some S3-compatible storage systems might have limited ACL support
+6. Check server logs for specific error messages related to ACL operations
 
 ### Folder Upload Issues
 

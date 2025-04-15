@@ -235,12 +235,70 @@ exports.getObject = async (bucketName, key) => {
     };
     
     const data = await s3.getObject(params).promise();
+    const dataAcl = await s3.getObjectAcl(params).promise();
+    data['acl'] = determineAclFromGrants(dataAcl.Grants);
     return data;
   } catch (error) {
     console.error(`Error getting object ${key} from bucket ${bucketName}:`, error);
     throw error;
   }
 };
+
+
+/**
+ * Helper function to determine ACL from S3 grants
+ * 
+ * @param {Array} grants - The grants array from getObjectAcl response
+ * @returns {string} - The determined ACL value
+ */
+function determineAclFromGrants(grants) {
+  // Default to private
+  let acl = 'private';
+  
+  if (!grants || !Array.isArray(grants)) {
+    return acl;
+  }
+  
+  // Check for public-read
+  const hasPublicRead = grants.some(grant => 
+    (grant.Grantee && grant.Grantee.URI === 'http://acs.amazonaws.com/groups/global/AllUsers') && 
+    grant.Permission === 'READ'
+  );
+  
+  if (hasPublicRead) {
+    return 'public-read';
+  }
+  
+  // Check for authenticated-read
+  const hasAuthenticatedRead = grants.some(grant => 
+    (grant.Grantee && grant.Grantee.URI === 'http://acs.amazonaws.com/groups/global/AuthenticatedUsers') && 
+    grant.Permission === 'READ'
+  );
+  
+  if (hasAuthenticatedRead) {
+    return 'authenticated-read';
+  }
+  
+  // Check for bucket owner permissions
+  const bucketOwnerGrants = grants.filter(grant => 
+    (grant.Grantee && grant.Grantee.Type === 'CanonicalUser') && 
+    grant.Permission && 
+    ['READ', 'FULL_CONTROL'].includes(grant.Permission)
+  );
+  
+  if (bucketOwnerGrants.length > 0) {
+    const hasFullControl = bucketOwnerGrants.some(grant => grant.Permission === 'FULL_CONTROL');
+    
+    if (hasFullControl) {
+      return 'bucket-owner-full-control';
+    } else {
+      return 'bucket-owner-read';
+    }
+  }
+  
+  return acl;
+}
+
 
 /**
  * Generate a presigned URL for an object
@@ -374,5 +432,27 @@ exports.deleteFolder = async(bucketName, folderPath) => {
   }
 }
 
+/**
+ * Set ACL permissions for an S3 object
+ * 
+ * @param {string} bucketName - The name of the S3 bucket
+ * @param {string} objectKey - The full key of the object (including any prefix/path)
+ * @param {string} acl - The ACL permission to set
+ * @returns {Promise} - Promise that resolves when the ACL is set
+ */
+exports.setAcl = async (bucketName, objectKey, acl) => {
+  try {
+    const params = {
+      Bucket: bucketName,
+      Key: objectKey,
+      ACL: acl
+    };
+    
+    return await s3.putObjectAcl(params).promise();
+  } catch (error) {
+    // Rethrow the error to be handled by the controller
+    throw error;
+  }
+};
 
 module.exports = exports;

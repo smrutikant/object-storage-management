@@ -35,6 +35,9 @@ router.get('/:bucketName/:key/share', objectController.generateSignedUrl);
 // Download an object
 router.get('/:bucketName/:key/download', objectController.downloadObject);
 
+// Update ACL of an object
+router.put('/:bucketName/:key/acl', objectController.setAcl);
+
 // View object details
 router.get('/:bucketName/:key', objectController.showObjectDetails);
 

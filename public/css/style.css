@@ -312,3 +312,8 @@ a.btn-primary.rowbtn{
   height: auto !important;
   display: inline-block;
 }
+
+.card-body{
+  max-height: 600px;
+  overflow-y: auto;
+}

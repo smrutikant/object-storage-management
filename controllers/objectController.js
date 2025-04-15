@@ -357,6 +357,86 @@ exports.fileAction = async(req, res, next) => {
 }
 
 /**
+ * Set/Update ACL
+ */
+
+exports.setAcl = async (req, res, next) => {
+  try {
+    // Get bucket name and key from URL parameters
+    const { bucketName, key } = req.params;
+    
+    // Get ACL value from request body
+    const { acl } = req.body;
+    
+    // Get optional prefix from query parameters
+    const { prefix } = req.query;
+    
+    // Validate required parameters
+    if (!bucketName) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Bucket name is required' 
+      });
+    }
+    
+    if (!key) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Object key is required' 
+      });
+    }
+    
+    // Validate ACL value
+    const validAcls = [
+      'private', 
+      'public-read', 
+      'authenticated-read', 
+      'bucket-owner-read', 
+      'bucket-owner-full-control'
+    ];
+    
+    if (!validAcls.includes(acl)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid ACL value' 
+      });
+    }
+    
+    // Construct the full object key (including prefix if provided)
+    const objectKey = prefix ? `${prefix}${key}` : key;
+    
+    // Call the setAcl function from your S3 service
+    await s3Service.setAcl(bucketName, objectKey, acl);
+    
+    return res.status(200).json({
+      success: true,
+      message: 'Object ACL updated successfully'
+    });
+    
+  } catch (error) {
+    console.error('Error updating object ACL:', error);
+    
+    // Check for specific errors from your S3 service
+    if (error.code === 'NoSuchKey') {
+      return res.status(404).json({
+        success: false,
+        message: 'Object not found'
+      });
+    }
+    
+    if (error.code === 'AccessDenied') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Check your S3 permissions.'
+      });
+    }
+    
+    // For other errors, pass to the error handler middleware
+    next(error);
+  }
+};
+
+/**
  * Generate a pre-signed URL for an object
  */
 exports.generateSignedUrl = async (req, res, next) => {
@@ -500,6 +580,7 @@ exports.showObjectDetails = async (req, res, next) => {
       name: path.basename(decodedKey),
       size: data.ContentLength,
       type: data.ContentType,
+      acl:data.acl,
       lastModified: data.LastModified,
       metadata: data.Metadata || {},
       publicUrl: s3Service.getPublicUrl(bucketName, decodedKey)
