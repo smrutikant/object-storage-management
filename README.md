@@ -25,7 +25,7 @@ A full-featured Express.js application for managing S3 buckets and objects with 
 - **Access Control**:
   - View and manage object ACL permissions
   - Set objects as private or public
-  - Support for common ACL presets (private, public-read, authenticated-read, etc.)
+  - Apply standard S3 ACL presets (private, public-read, authenticated-read, etc.)
   - Quick permission changes directly from the object details page
 
 - **Sharing**:
@@ -121,7 +121,7 @@ A full-featured Express.js application for managing S3 buckets and objects with 
 ### Managing ACL Permissions
 
 - **View ACL**: Object details page displays current ACL permissions
-- **Change ACL**: Select from the dropdown of available ACL permissions:
+- **Change ACL**: Select from the dropdown of standard S3 ACL presets:
   - **Private**: No public access
   - **Public Read**: Anyone can read the object
   - **Authenticated Read**: Only authenticated users can read
@@ -131,7 +131,7 @@ A full-featured Express.js application for managing S3 buckets and objects with 
 - **Permission Effects**: 
   - Setting to "public-read" makes files accessible without authentication
   - Setting to "private" restricts access to authenticated users only
-- **Batch ACL Changes**: Coming in a future update
+- **Limitations**: This implementation only supports standard S3 canned ACLs, not custom permissions or user groups
 
 ### Batch Operations
 
@@ -241,13 +241,15 @@ Set `S3_FORCE_PATH_STYLE=true` for most on-premise S3-compatible storage systems
 
 ### ACL Permissions
 
-By default, the application supports standard S3 ACL permissions. The available ACL options are:
+The application supports the standard S3 canned ACL permissions. The available ACL options are:
 
 - **private**: Owner gets FULL_CONTROL. No one else has access rights.
 - **public-read**: Owner gets FULL_CONTROL. The AllUsers group gets READ access.
 - **authenticated-read**: Owner gets FULL_CONTROL. The AuthenticatedUsers group gets READ access.
 - **bucket-owner-read**: Object owner gets FULL_CONTROL. Bucket owner gets READ access.
 - **bucket-owner-full-control**: Both the object owner and the bucket owner get FULL_CONTROL.
+
+Note that these are predefined permission sets provided by the S3 API. This implementation does not support custom ACLs or fine-grained permissions for specific users or groups. For more advanced access control, consider implementing AWS IAM policies or a custom permission system.
 
 ## Folder Upload Guidelines
 
