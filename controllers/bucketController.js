@@ -3,7 +3,7 @@ const s3Service = require('../services/s3Service');
 /**
  * Display a list of all buckets
  */
-exports.listBuckets = async (req, res, next) => {
+exports.listBuckets = async function (req, res, next) {
   try {
     const buckets = await s3Service.listBuckets();
     res.render('buckets/list', { 
@@ -29,9 +29,10 @@ exports.showCreateForm = (req, res) => {
 /**
  * Create a new bucket
  */
-exports.createBucket = async (req, res, next) => {
+exports.createBucket = async function (req, res, next){
   try {
-    const { bucketName } = req.body;
+    
+    const { bucketName,isPublic } = req.body;
     
     if (!bucketName) {
       return res.render('buckets/create', { 
@@ -39,8 +40,7 @@ exports.createBucket = async (req, res, next) => {
         messages: { error: 'Bucket name is required' }
       });
     }
-    
-    await s3Service.createBucket(bucketName);
+    await s3Service.createBucket(bucketName,isPublic);
     
     res.redirect('/buckets?message=' + encodeURIComponent(`Bucket "${bucketName}" created successfully`));
   } catch (error) {
@@ -76,7 +76,6 @@ exports.createFolder = async (req, res, next) => {
       
       res.json({ success: true, message: 'Folder created successfully', key: folderKey });
     } catch (error) {
-      console.error(`Error creating folder:`, error);
       res.status(500).json({ error: error.message });
     }
   };
@@ -119,7 +118,7 @@ function formatDate(date) {
 /**
  * Show bucket details with objects list
  */
-exports.bucketDetails = async (req, res, next) => {
+exports.bucketDetails = async function (req, res, next) {
   try {
     const buckets = await s3Service.listBuckets();
     const { bucketName } = req.params;
@@ -175,7 +174,6 @@ exports.bucketDetails = async (req, res, next) => {
       };
     });
     
-    console.log(buckets, "Buckets");
     res.render('objects/list', { 
       bucketList:buckets,
       title: `Bucket: ${bucketName}`,

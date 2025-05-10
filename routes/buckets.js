@@ -12,7 +12,7 @@ router.get('/create', bucketController.showCreateForm);
 router.post('/create', bucketController.createBucket);
 
 // Delete a bucket
-router.delete('/:bucketName', bucketController.deleteBucket);
+router.post('/:bucketName', bucketController.deleteBucket);
 
 // List objects in a bucket
 router.get('/:bucketName/objects', bucketController.bucketDetails);

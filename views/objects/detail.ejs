@@ -1,3 +1,162 @@
+<!-- Updated Highlight.js + custom VS Code style -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/vs2015.min.css">
+    
+<!-- Include Highlight.js JavaScript -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+<!-- Include specific languages if needed -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+
+<!-- Add custom VS Code-like styling -->
+<style>
+    /* VS Code-like styling for code blocks */
+    pre {
+        background-color: #1e1e1e !important;
+        border-radius: 6px !important;
+        margin: 0 !important;
+        padding: 16px !important;
+        font-family: 'Consolas', 'Courier New', monospace !important;
+        font-size: 14px !important;
+        line-height: 1.5 !important;
+        overflow: auto !important;
+        position: relative !important;
+        color: #d4d4d4 !important;
+    }
+    
+    code {
+        font-family: 'Consolas', 'Courier New', monospace !important;
+        background: none !important;
+        padding: 0 !important;
+        border-radius: 0 !important;
+        color: #d4d4d4 !important;
+    }
+    
+    /* Force VS Code color scheme (using !important to override any existing styles) */
+    .hljs-keyword, 
+    .hljs-selector-tag, 
+    .hljs-built_in, 
+    .hljs-type, 
+    .hljs-literal {
+        color: #569cd6 !important;
+    }
+    
+    .hljs-string, 
+    .hljs-regexp, 
+    .hljs-addition, 
+    .hljs-attribute, 
+    .hljs-meta .hljs-string {
+        color: #ce9178 !important;
+    }
+    
+    .hljs-comment, 
+    .hljs-quote, 
+    .hljs-deletion {
+        color: #6a9955 !important;
+    }
+    
+    .hljs-doctag, 
+    .hljs-name, 
+    .hljs-selector-id, 
+    .hljs-selector-class, 
+    .hljs-selector-attr, 
+    .hljs-selector-pseudo {
+        color: #d7ba7d !important;
+    }
+    
+    .hljs-number {
+        color: #b5cea8 !important;
+    }
+    
+    .hljs-symbol, 
+    .hljs-bullet, 
+    .hljs-link, 
+    .hljs-meta, 
+    .hljs-selector-id, 
+    .hljs-title {
+        color: #dcdcaa !important;
+    }
+    
+    .hljs-title.class_, 
+    .hljs-class .hljs-title {
+        color: #4ec9b0 !important;
+    }
+    
+    .hljs-variable, 
+    .hljs-template-variable, 
+    .hljs-strong, 
+    .hljs-emphasis, 
+    .hljs-attr {
+        color: #9cdcfe !important;
+    }
+    
+    .hljs-property {
+        color: #9cdcfe !important;
+    }
+    
+    .hljs-tag {
+        color: #569cd6 !important;
+    }
+    
+    .hljs-name {
+        color: #569cd6 !important;
+    }
+    
+    .hljs-attr {
+        color: #9cdcfe !important;
+    }
+    
+    /* VS Code-like line numbers */
+    .with-line-numbers {
+        counter-reset: line !important;
+        padding-left: 3.5em !important;
+        position: relative !important;
+    }
+    
+    .with-line-numbers::before {
+        content: "" !important;
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        bottom: 0 !important;
+        width: 2.5em !important;
+        background: #252526 !important;
+        border-right: 1px solid #333 !important;
+    }
+    
+    .with-line-numbers > code {
+        position: relative !important;
+    }
+    
+    .with-line-numbers > code > span {
+        display: block !important;
+        position: relative !important;
+    }
+    
+    .with-line-numbers > code > span::before {
+        counter-increment: line !important;
+        content: counter(line) !important;
+        position: absolute !important;
+        left: -3em !important;
+        width: 2.5em !important;
+        color: #858585 !important;
+        text-align: right !important;
+        padding-right: 0.5em !important;
+    }
+    
+    /* Ensure code blocks inside cards have proper styling */
+    .card .card-body code {
+        color: #d4d4d4 !important;
+        background-color: #1e1e1e !important;
+        padding: 0.2em 0.4em !important;
+        border-radius: 3px !important;
+        font-family: 'Consolas', 'Courier New', monospace !important;
+    }
+</style>
+
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
     <h1 class="h2"><i class="fas fa-file me-2"></i> Object Details</h1>
     <div class="btn-toolbar mb-2 mb-md-0" >
@@ -20,7 +179,7 @@
                 </div>
                 <div class="row mb-3">
                     <div class="col-md-3 fw-bold">Object Key:</div>
-                    <div class="col-md-9"><code><%= object.key %></code></div>
+                    <div class="col-md-9"><code class="language-javascript"><%= object.key %></code></div>
                 </div>
                 <div class="row mb-3">
                     <div class="col-md-3 fw-bold">File Size:</div>
@@ -96,27 +255,93 @@
             </div>
 
             <script>
-            // Fetch and display code files
+            // Fetch and display code files with VS Code-like styling
             document.addEventListener('DOMContentLoaded', function() {
                 const previewContainer = document.getElementById('codePreview_<%= object.key.replace(/[^a-zA-Z0-9]/g, '_') %>');
+                
+                // First, make sure highlight.js is initialized
+                if (typeof hljs === 'undefined') {
+                    console.error('highlight.js is not loaded');
+                    previewContainer.innerHTML = '<div class="alert alert-warning">Syntax highlighting library not loaded.</div>';
+                    return;
+                }
                 
                 fetch('/objects/<%= bucketName %>/<%= encodeURIComponent(object.key) %>/download')
                     .then(response => response.text())
                     .then(content => {
                         // Create pre and code elements
                         const pre = document.createElement('pre');
-                        pre.className = 'language-markup line-numbers';
+                        pre.className = 'with-line-numbers';
                         const code = document.createElement('code');
+                        
+                        // Determine language for syntax highlighting based on file extension
+                        const fileName = '<%= object.name %>';
+                        const fileExtension = fileName.split('.').pop().toLowerCase();
+                        let language = 'plaintext';
+                        
+                        // Map file extensions to highlight.js languages
+                        const languageMap = {
+                            'js': 'javascript',
+                            'jsx': 'javascript',
+                            'ts': 'typescript',
+                            'tsx': 'typescript',
+                            'html': 'html',
+                            'css': 'css',
+                            'json': 'json',
+                            'xml': 'xml',
+                            'md': 'markdown',
+                            'py': 'python',
+                            'java': 'java',
+                            'c': 'c',
+                            'cpp': 'cpp',
+                            'cs': 'csharp',
+                            'go': 'go',
+                            'php': 'php',
+                            'rb': 'ruby',
+                            'sh': 'bash',
+                            'yml': 'yaml',
+                            'yaml': 'yaml',
+                            'sql': 'sql'
+                        };
+                        
+                        if (languageMap[fileExtension]) {
+                            language = languageMap[fileExtension];
+                        }
+                        
+                        // Apply the content and language class directly
                         code.textContent = content;
+                        code.className = `language-${language}`;
                         pre.appendChild(code);
                         
                         // Replace loading spinner with code
                         previewContainer.innerHTML = '';
                         previewContainer.appendChild(pre);
                         
-                        // If Prism.js is available, initialize syntax highlighting
-                        if (typeof Prism !== 'undefined') {
-                            Prism.highlightElement(code);
+                        // Fix for syntax highlighting - explicitly force highlighting with the correct language
+                        try {
+                            // Force highlighting with explicit language
+                            const result = hljs.highlight(content, {
+                                language: language,
+                                ignoreIllegals: true
+                            });
+                            
+                            // Apply the highlighted HTML
+                            code.innerHTML = result.value;
+                            
+                            // Add line numbers - process after highlighting
+                            const codeLines = code.innerHTML.split('\n');
+                            let numberedCode = '';
+                            
+                            codeLines.forEach(line => {
+                                numberedCode += `<span>${line}</span>\n`;
+                            });
+                            
+                            code.innerHTML = numberedCode;
+                            
+                            console.log('Syntax highlighting applied successfully');
+                        } catch (error) {
+                            console.error('Error applying syntax highlighting:', error);
+                            // Fallback - at least display the code
                         }
                     })
                     .catch(error => {
@@ -286,6 +511,11 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Initialize syntax highlighting for all code blocks
+        document.querySelectorAll('pre code').forEach(block => {
+            hljs.highlightElement(block);
+        });
+        
         // Copy URL to clipboard
         document.getElementById('copyPublicUrl').addEventListener('click', function() {
             const urlField = document.getElementById('publicUrl');

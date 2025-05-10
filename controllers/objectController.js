@@ -8,7 +8,7 @@ const fs = require('fs-extra');
 /**
  * Show object upload form
  */
-exports.showUploadForm = (req, res) => {
+exports.showUploadForm = function (req, res) {
   const { bucketName, prefix } = req.query;
   
   if (!bucketName) {
@@ -27,7 +27,7 @@ exports.showUploadForm = (req, res) => {
 /**
  * Show object upload form
  */
-exports.showUploadFolderForm = (req, res) => {
+exports.showUploadFolderForm = function(req, res) {
   const { bucketName, prefix } = req.query;
   
   if (!bucketName) {
@@ -47,7 +47,7 @@ exports.showUploadFolderForm = (req, res) => {
  * Check upload progress
  */
 
-exports.checkProgress = (req,res) => {
+exports.checkProgress = function(req,res) {
   const id = req.params.id;
   if (uploadStatus[id]) {
     res.json(uploadStatus[id]);
@@ -60,7 +60,7 @@ exports.checkProgress = (req,res) => {
  * Upload folder to bucket
  */
 
-exports.uploadFolder = async (req, res,next) => {
+exports.uploadFolder = async function (req, res,next) {
   try {
     // Check if files were uploaded
     if (!req.files || Object.keys(req.files).length === 0) {
@@ -82,15 +82,6 @@ exports.uploadFolder = async (req, res,next) => {
       files = [uploadedFiles];
     }
     
-    // Ensure we don't exceed file count limit
-    // if (files.length > 10) {
-    //   return res.status(400).json({
-    //     success: false,
-    //     message: 'Maximum 10 files are allowed'
-    //   });
-    // }
-    
-    // Parse base path data for folder structure
     const basePathData = req.body.basePathData ? JSON.parse(req.body.basePathData) : { basePath: '' };
     const { basePath } = basePathData;
     
@@ -308,7 +299,7 @@ exports.downloadObject = async (req, res, next) => {
 /**
  * Delete an object
  */
-exports.deleteObject = async (req, res, next) => {
+exports.deleteObject = async function (req, res, next){
   try {
     const { bucketName, key } = req.params;
     const { prefix } = req.query;
@@ -337,7 +328,7 @@ async function actionDeleteObject(bucketName,key,prefix) {
   }
 }
 
-exports.fileAction = async(req, res, next) => {
+exports.fileAction = async function(req, res, next) {
   try{
     const { bucketName, key } = req.params;
     const { prefix } = req.query;
@@ -360,7 +351,7 @@ exports.fileAction = async(req, res, next) => {
  * Set/Update ACL
  */
 
-exports.setAcl = async (req, res, next) => {
+exports.setAcl = async function (req, res, next){
   try {
     // Get bucket name and key from URL parameters
     const { bucketName, key } = req.params;
@@ -439,13 +430,13 @@ exports.setAcl = async (req, res, next) => {
 /**
  * Generate a pre-signed URL for an object
  */
-exports.generateSignedUrl = async (req, res, next) => {
+exports.generateSignedUrl = async function (req, res, next) {
   try {
     const { bucketName, key } = req.params;
     const { expiresIn } = req.query;
-    
     const expires = parseInt(expiresIn) || 3600; // Default 1 hour
     const decodedKey = decodeURIComponent(key);
+    
     const url = s3Service.getSignedUrl(bucketName, decodedKey, expires);
     
     res.render('objects/share', {
